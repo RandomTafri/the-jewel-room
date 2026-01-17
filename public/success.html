@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Placed - The Jewel Room</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <header>
+        <div class="container navbar">
+            <div class="logo"><a href="index.html">The Jewel Room</a></div>
+        </div>
+    </header>
+    <div class="container section text-center">
+        <h1 style="color: var(--success); margin-bottom: 20px;">Order Placed Successfully!</h1>
+        <p>Thank you for shopping with us.</p>
+        <p>Your Order ID is: <span id="order-id" style="font-weight: bold;"></span></p>
+
+        <div style="margin-top: 40px;">
+            <a href="shop.html" class="btn">Continue Shopping</a>
+            <a href="account.html" class="btn-outline" style="margin-left: 10px;">View Order</a>
+        </div>
+    </div>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        document.getElementById('order-id').innerText = '#' + (params.get('orderId') || 'Unknown');
+    </script>
+</body>
+
+</html>

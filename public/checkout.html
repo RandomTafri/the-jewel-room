@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - The Jewel Room</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <div class="container flex justify-between items-center">
+            <div class="logo"><a href="index.html">
+                    <h1>The Jewel Room</h1>
+                </a></div>
+        </div>
+    </header>
+
+    <div class="container section flex" style="gap: 40px; align-items: flex-start;">
+        <div style="flex: 2;">
+            <h2>Checkout</h2>
+            <form id="checkout-form" style="display: grid; gap: 15px; margin-top: 20px;">
+                <!-- If not logged in, ask for guest details, but we will protect this page via JS for simplicity or allow guest checkout -->
+                <!-- We will allow guest checkout -->
+
+                <h3>Contact & Shipping</h3>
+                <input type="text" id="name" placeholder="Full Name" required class="input-field"
+                    style="padding: 10px; border: 1px solid #ccc;">
+                <input type="email" id="email" placeholder="Email Address" required class="input-field"
+                    style="padding: 10px; border: 1px solid #ccc;">
+                <input type="tel" id="phone" placeholder="Phone Number" required class="input-field"
+                    style="padding: 10px; border: 1px solid #ccc;">
+                <textarea id="address" placeholder="Full Shipping Address" rows="4" required class="input-field"
+                    style="padding: 10px; border: 1px solid #ccc;"></textarea>
+
+                <h3 style="margin-top: 20px;">Payment Method</h3>
+                <div style="margin-bottom: 10px;">
+                    <label>
+                        <input type="radio" name="payment" value="COD" checked> Cash on Delivery (COD)
+                    </label>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label>
+                        <input type="radio" name="payment" value="ONLINE"> Online Payment (UPI/Card/Netbanking)
+                    </label>
+                </div>
+
+                <button type="submit" class="btn" style="width: 100%; margin-top: 20px;">Place Order</button>
+            </form>
+        </div>
+
+        <div style="flex: 1; background: #fafafa; padding: 20px; border: 1px solid #eee;">
+            <h3>Order Summary</h3>
+            <div id="order-summary">Loading...</div>
+            <hr style="margin: 15px 0;">
+            <h3>Total: <span id="checkout-total">0</span></h3>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        let cartTotal = 0;
+        let cartItems = [];
+
+        async function initCheckout() {
+            // Check auth, if logged in fill details
+            if (State.user) {
+                document.getElementById('name').value = State.user.name;
+                document.getElementById('email').value = State.user.email;
+                if (State.user.phone) document.getElementById('phone').value = State.user.phone;
+            }
+
+            // Load Cart
+            const res = await API.get('/cart');
+            cartItems = res.items;
+            if (cartItems.length === 0) {
+                window.location.href = 'cart.html';
+                return;
+            }
+
+            cartTotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+
+            const summaryDiv = document.getElementById('order-summary');
+            summaryDiv.innerHTML = cartItems.map(i => `
+                <div class="flex justify-between" style="margin-bottom: 10px; font-size: 0.9rem;">
+                    <span>${i.name} x ${i.quantity}</span>
+                    <span>${formatPrice(i.price * i.quantity)}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('checkout-total').innerText = formatPrice(cartTotal);
+        }
+
+        document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!State.user) {
+                // For guest checkout we still need a user mechanism or just create order with user_id null.
+                // Our DB for orders has user_id, but we can make it nullable or create a temporary user. 
+                // For this template, let's force login for simplicity or assume token is present (we have auth requirement).
+                // "Customer registration + login" was a requirement. 
+                // But typically guests can checkout.
+                // Let's prompt login if not logged in.
+
+                if (!confirm('You are checking out as a Guest. Click OK to continue or Cancel to Login.')) {
+                    window.location.href = 'account.html';
+                    return;
+                }
+                // NOTE: The backend expects a logged in user for `orders` table `user_id` OR we must modify backend.
+                // The prompt says "Persistent cart: For guests... convert to DB cart AFTER login".
+                // And "Checkout: creates order in DB".
+                // It does not explicitly forbid guest checkout, but usually ecommerce allows it. 
+                // However, `orders.user_id` is a FK. It should be nullable if we allow guest orders.
+                // My schema init script for `orders` has `user_id INTEGER REFERENCES users(id)`, it's not NOT NULL.
+                // So it is nullable. OK.
+            }
+
+            // NOTE: My order creation API `server/routes/orders.js` uses `authenticateToken` middleware and `req.user.id`. 
+            // This means I ENFORCED login for ordering in my backend implementation. 
+            // Retracting: I need to allow checkout without token OR force login.
+            // Given "Customer registration + login" is a header feature, I will force login for this MVP template to keep it clean.
+            // Or I can modify the backend to be optional auth. I will stick to "Force Login" for simplicity in this turn unless I change backend.
+            // Wait, "Persistent cart ... For guests: store cart in localStorage and convert to DB cart after login" implies login is the expected path to persistent state.
+            // Let's Alert user to login.
+
+            if (!State.token) {
+                alert('Please login to checkout.');
+                window.location.href = 'account.html?redirect=checkout.html';
+                return;
+            }
+
+            const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+            const data = {
+                customerName: document.getElementById('name').value,
+                customerPhone: document.getElementById('phone').value,
+                shippingAddress: document.getElementById('address').value,
+                items: cartItems,
+                paymentMethod,
+                totalAmount: cartTotal
+            };
+
+            try {
+                const res = await API.post('/orders', data);
+
+                if (paymentMethod === 'ONLINE') {
+                    // Open Razorpay
+                    const options = {
+                        "key": State.config.razorpayKeyId, // Enter the Key ID generated from the Dashboard
+                        "amount": res.razorpayOrder.amount,
+                        "currency": "INR",
+                        "name": State.config.appName,
+                        "description": "Order #" + res.orderId,
+                        "order_id": res.razorpayOrder.id,
+                        "handler": async function (response) {
+                            // Verify payment
+                            try {
+                                const verify = await API.post('/orders/verify-payment', {
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    orderId: res.orderId
+                                });
+                                if (verify.status === 'success') {
+                                    window.location.href = 'success.html?orderId=' + res.orderId;
+                                } else {
+                                    alert('Payment verification failed');
+                                }
+                            } catch (e) {
+                                alert('Payment verification error');
+                            }
+                        },
+                        "prefill": {
+                            "name": data.customerName,
+                            "email": document.getElementById('email').value,
+                            "contact": data.customerPhone
+                        },
+                        "theme": {
+                            "color": "#d4af37"
+                        }
+                    };
+                    const rzp1 = new Razorpay(options);
+                    rzp1.open();
+
+                } else {
+                    // COD Success
+                    window.location.href = 'success.html?orderId=' + res.orderId;
+                }
+
+            } catch (e) {
+                console.error(e);
+                alert('Order creation failed');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', initCheckout);
+    </script>
+</body>
+
+</html>

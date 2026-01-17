@@ -1,0 +1,53 @@
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Routes
+const authRoutes = require('./routes/auth');
+const productRoutes = require('./routes/products');
+const cartRoutes = require('./routes/cart');
+const orderRoutes = require('./routes/orders');
+const adminRoutes = require('./routes/admin'); // Admin specific actions not covered in others
+const brochureRoutes = require('./routes/brochures');
+const categoryRoutes = require('./routes/categories');
+const wishlistRoutes = require('./routes/wishlist');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/brochures', brochureRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/wishlist', wishlistRoutes);
+
+// Config endpoint for frontend
+const config = require('../config');
+app.get('/api/config', (req, res) => {
+    res.json({
+        appName: config.appName,
+        enableCOD: config.enableCOD,
+        enableOnlinePayment: config.enableOnlinePayment,
+        razorpayKeyId: config.razorpayKeyId, // Safe to expose public key
+        whatsappNumber: config.whatsappNumber,
+        theme: config.theme,
+        supportEmail: config.supportEmail
+    });
+});
+
+// Fallback for SPA-like navigation if we were using it, but we are using multi-page
+// For multi-page, we just serve static files. 
+// If a file isn't found, 404.
+
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+});

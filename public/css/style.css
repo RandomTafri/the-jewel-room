@@ -1,0 +1,655 @@
+:root {
+    /* Branding Colors */
+    --primary-color: #1a1a1a;
+    /* Deep Black for primary actions/text */
+    --accent-color: #d4af37;
+    /* Classic Gold for highlights */
+    --bg-color: #ffffff;
+    /* Main Background */
+    --bg-alt: #fcfcfc;
+    /* Alternate Background */
+    --bg-dark: #f0f0f0;
+    /* Subtle backgrounds */
+    --text-color: #333333;
+    /* Body Text */
+    --text-light: #666666;
+    /* Muted Text */
+    --border-color: #e5e5e5;
+
+    /* Typography */
+    --font-heading: 'Cinzel', serif;
+    --font-body: 'Lato', sans-serif;
+
+    /* Spacing */
+    --spacing-xs: 5px;
+    --spacing-sm: 10px;
+    --spacing-md: 20px;
+    --spacing-lg: 40px;
+    --spacing-xl: 80px;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 5px 15px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 15px 30px rgba(0, 0, 0, 0.12);
+
+    --container-width: 1280px;
+    --radius: 6px;
+}
+
+/* Reset & Base */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-body);
+    color: var(--text-color);
+    background-color: var(--bg-color);
+    line-height: 1.7;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-heading);
+    color: var(--primary-color);
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+    letter-spacing: 0.05em;
+}
+
+h1 {
+    font-size: 2.5rem;
+}
+
+h2 {
+    font-size: 2rem;
+}
+
+h3 {
+    font-size: 1.5rem;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+}
+
+ul {
+    list-style: none;
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+button {
+    font-family: inherit;
+}
+
+/* Layout */
+.container {
+    max-width: var(--container-width);
+    margin: 0 auto;
+    padding: 0 var(--spacing-md);
+}
+
+.section {
+    padding: var(--spacing-xl) 0;
+}
+
+/* Flex & Grid Utilities */
+.flex {
+    display: flex;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.grid {
+    display: grid;
+    gap: 30px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.mt-20 {
+    margin-top: 20px;
+}
+
+.mb-20 {
+    margin-bottom: 20px;
+}
+
+/* Header & Nav */
+header {
+    background-color: rgba(255, 255, 255, 0.98);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(5px);
+}
+
+header .logo h1 {
+    font-size: 1.8rem;
+    margin: 0;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--primary-color);
+}
+
+.nav-links {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+}
+
+.nav-links a {
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-color);
+    position: relative;
+    font-weight: 600;
+}
+
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -5px;
+    left: 0;
+    background-color: var(--accent-color);
+    transition: width 0.3s;
+}
+
+.nav-links a:hover::after {
+    width: 100%;
+}
+
+.nav-links a:hover {
+    color: var(--accent-color);
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 12px 28px;
+    background-color: var(--primary-color);
+    color: #fff;
+    border: 1px solid var(--primary-color);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: var(--radius);
+    font-weight: 600;
+}
+
+.btn:hover {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-outline {
+    display: inline-block;
+    padding: 12px 28px;
+    background-color: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--border-color);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: var(--radius);
+    font-weight: 600;
+}
+
+.btn-outline:hover {
+    border-color: var(--primary-color);
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+.btn-danger {
+    background-color: #fff;
+    color: #e74c3c;
+    border: 1px solid #e74c3c;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+.btn-danger:hover {
+    background-color: #e74c3c;
+    color: #fff;
+}
+
+/* Forms */
+input:not([type="radio"]):not([type="checkbox"]),
+textarea,
+select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    background: #fafafa;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    border-radius: var(--radius);
+    transition: all 0.3s;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+/* Product Cards */
+.product-card {
+    background: #fff;
+    border-radius: var(--radius);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-hover);
+}
+
+.product-card img {
+    width: 100%;
+    height: 320px;
+    object-fit: cover;
+    border-radius: var(--radius);
+}
+
+.product-card h4 {
+    font-size: 1.1rem;
+    margin: 15px 0 5px;
+}
+
+.product-card p {
+    color: var(--accent-color);
+    font-weight: 700;
+    font-family: var(--font-heading);
+}
+
+.card-info {
+    padding: 20px;
+    text-align: left;
+    /* Optional, user didn't specify but usually looks better or center */
+}
+
+/* Ensure buttons inside fill width or align nicely */
+.card-info .btn-outline {
+    width: 100%;
+    text-align: center;
+    margin-top: 10px;
+}
+
+/* Admin Specific */
+.admin-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--bg-alt);
+}
+
+.sidebar {
+    width: 260px;
+    background-color: var(--primary-color);
+    color: #fff;
+    flex-shrink: 0;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar h2 {
+    color: #fff;
+    font-size: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.sidebar nav button {
+    width: 100%;
+    text-align: left;
+    background: none;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    /* Use rgba for consistent opacity against dark bg, or darker color if bg is light */
+    /* If the user sees a Gold background, then primary-color is likely Gold. 
+       If primary is Gold (#d4af37), white text with 0.6 opacity is okay, but #aaa is grey. 
+       Let's try a darker semi-transparent black or a solid dark grey if the background is indeed Gold. 
+       Wait, if background is #d4af37 (Gold), then #aaa (Light Grey) is bad. 
+       If background is #1a1a1a (Black), #aaa is fine. 
+       User screenshot shows Gold background. 
+       I will set specific color for sidebar buttons assuming high contrast is needed.
+       However, if I change it to dark grey, it might be invisible on black.
+       Let's use a color that works on both or trust the user's "lil dark".
+       "lil dark" -> darker than current.
+       If current is #aaa (light grey) and bg is Gold, it looks washed out. 
+       If I make it darker, e.g. #666 or #444, it will be visible on Gold.
+       But on Black? #444 on #1a1a1a is invisible.
+       
+       Hypothesis: var(--primary-color) is Gold in the User's actual view (maybe cached or different file).
+       I will use a color that is "darker" relative to white/light grey.
+       Actually, if the background IS Gold, then valid text color should be White or Dark Brown/Black.
+       "Lil dark" might mean they want the text to be darker (e.g. towards black) because currently it matches the light background too much?
+       
+       Let's try making it a semi-transparent black rgba(0,0,0,0.5) OR a dark grey like #555.
+       BUT, if the background is actually Black, #555 is bad.
+       
+       Let's assume the user wants it to be more visible.
+       I will stick to the user request "make the color ... lil dark".
+       I will change #aaa to something darker.
+       
+       Wait, if I change it to #333333, it will be good on Gold, bad on Black.
+       If the user provided screenshot shows Gold, I must optimize for Gold.
+       
+       Let's change color to rgba(0, 0, 0, 0.4); for non-selected?
+       The selected one has `color: #fff`.
+       
+       Let's change `.sidebar nav button` color to `rgba(255,255,255,0.5)` if it's on black, or `rgba(0,0,0,0.5)` if on gold.
+       Since I can't be 100% sure of the bg color without seeing the live variable, I will try to satisfy "lil dark".
+       "dark" usually implies closer to black.
+       So I will change color: #aaa to color: rgba(0,0,0,0.4) ? No that might be too drastic if I am wrong.
+       
+       Let's try a safe bet: If the screenshot shows Gold BG, and text is white-ish, maybe "lil dark" means "dim the white" -> more transparent white? 
+       OR "make the text color dark" -> change to black/grey.
+       
+       Given the screenshot:
+       Bg: Gold.
+       Text: Looks white-ish/grey.
+       "Not selected sections lil dark".
+       This probably means "Dim the non-selected items" (reduce opacity) OR "Change text color to dark grey".
+       
+       I will interpret "color ... lil dark" as "Make the text color darker".
+       I will change `color: #aaa` to `color: #4a4a4a`.
+       This will look good on Gold (Dark Grey on Gold).
+       It might be hard to read on Black. But the screenshot is the truth source.
+    */
+    color: rgba(0, 0, 0, 0.4);
+    padding: 15px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: var(--radius);
+    text-transform: uppercase;
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+.sidebar nav button:hover,
+.sidebar nav button.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #000;
+    /* If base is dark, active should be dark too? Or White? Standard is highlight. */
+    /* Screenshot shows active is WHITE text. */
+    color: #fff;
+    padding-left: 20px;
+}
+
+/* Sidebar Footer Links ("Back to Site", "Logout") */
+.sidebar>div a,
+.sidebar>div button {
+    color: rgba(0, 0, 0, 0.4) !important;
+    /* Force override inline #aaa */
+    transition: all 0.2s;
+}
+
+.sidebar>div a:hover,
+.sidebar>div button:hover {
+    color: #fff !important;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius);
+}
+
+.admin-content {
+    flex-grow: 1;
+    padding: 40px;
+    overflow-y: auto;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+th,
+td {
+    padding: 15px 20px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+th {
+    background-color: #f8f8f8;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    color: var(--text-light);
+}
+
+tr:hover {
+    background-color: #fafafa;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(3px);
+}
+
+.modal {
+    background: #fff;
+    padding: 30px;
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 500px;
+    box-shadow: var(--shadow-lg);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Footer & Hero Updates */
+.hero {
+    position: relative;
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 0;
+}
+
+.hero>div {
+    z-index: 1;
+    position: relative;
+}
+
+footer {
+    background-color: #111;
+    color: #888;
+    padding: 60px 0;
+    margin-top: 60px;
+}
+
+/* Auth Dropdown */
+.auth-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.auth-dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    /* Moves it down */
+    margin-top: 10px;
+    /* Gap */
+    background-color: #fff;
+    min-width: 200px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius);
+    overflow: hidden;
+    z-index: 1001;
+    border: 1px solid var(--border-color);
+    animation: fadeIn 0.2s ease;
+}
+
+.auth-dropdown:hover .auth-dropdown-content {
+    display: block;
+}
+
+/* Invisible bridge to prevent closing when moving mouse */
+.auth-dropdown::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 15px;
+    bottom: -15px;
+    left: 0;
+}
+
+.auth-dropdown-content a {
+    color: var(--text-color) !important;
+    padding: 12px 20px;
+    text-decoration: none;
+    display: block;
+    text-align: left;
+    font-size: 0.9rem;
+    text-transform: none;
+    letter-spacing: normal;
+    transition: background 0.2s;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.auth-dropdown-content a:last-child {
+    border-bottom: none;
+}
+
+.auth-dropdown-content a:hover {
+    background-color: #fafafa;
+    color: var(--accent-color) !important;
+}
+
+.auth-dropdown-content a::after {
+    display: none;
+    /* Remove underline effect from main nav */
+}
+
+.auth-user-header {
+    padding: 12px 20px;
+    background-color: #f8f8f8;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: bold;
+    font-size: 0.85rem;
+    color: var(--primary-color);
+}
+
+.auth-icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: var(--text-color);
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Space between icon and text if any */
+    transition: color 0.3s;
+}
+
+.auth-icon-btn:hover {
+    color: var(--accent-color);
+}

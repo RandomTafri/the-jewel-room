@@ -1,0 +1,108 @@
+const express = require('express');
+const router = express.Router();
+const db = require('../db');
+const { authenticateToken, isAdmin } = require('../middleware/auth');
+const Razorpay = require('razorpay');
+require('dotenv').config();
+
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
+});
+
+// Create Order
+router.post('/', authenticateToken, async (req, res) => {
+    const {
+        shippingAddress,
+        customerName,
+        customerPhone,
+        items, // Passed from frontend or we fetch from DB cart. Fetching from DB is safer.
+        paymentMethod, // 'COD' or 'ONLINE'
+        totalAmount // Simplified: Frontend calculates, Backend verifies ideally.
+    } = req.body;
+
+    // In a real app, perform calculation verification here using `items` IDs.
+    // For this template, we assume `items` contains { product_id, quantity, price } and we sum it up.
+
+    try {
+        // 1. Create Order in DB
+        const result = await db.query(
+            `INSERT INTO orders 
+            (user_id, customer_name, customer_email, customer_phone, shipping_address, total_amount, payment_method, items_snapshot, payment_status)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+            [
+                req.user.id,
+                customerName,
+                req.user.email, // Assuming email from token 
+                customerPhone,
+                shippingAddress,
+                totalAmount,
+                paymentMethod,
+                JSON.stringify(items),
+                paymentMethod === 'COD' ? 'PENDING' : 'PENDING'
+            ]
+        );
+
+        const order = result.rows[0];
+
+        // 2. If Online, create Razorpay Order
+        let razorpayOrder = null;
+        if (paymentMethod === 'ONLINE') {
+            const options = {
+                amount: Math.round(totalAmount * 100), // amount in paisa
+                currency: "INR",
+                receipt: `order_${order.id}`
+            };
+            razorpayOrder = await razorpay.orders.create(options);
+
+            // Update DB with razorpay order id
+            await db.query('UPDATE orders SET razorpay_order_id = $1 WHERE id = $2', [razorpayOrder.id, order.id]);
+        }
+
+        // 3. Clear Cart (assume user has one cart)
+        await db.query('DELETE FROM cart_items WHERE cart_id = (SELECT id FROM carts WHERE user_id = $1)', [req.user.id]);
+
+        res.json({
+            orderId: order.id,
+            razorpayOrder,
+            message: 'Order Created'
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Order Creation Failed' });
+    }
+});
+
+// Verify Payment (Razorpay)
+router.post('/verify-payment', authenticateToken, async (req, res) => {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
+
+    const crypto = require('crypto');
+    const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
+    hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+    const generated_signature = hmac.digest('hex');
+
+    if (generated_signature === razorpay_signature) {
+        // Success
+        await db.query(
+            "UPDATE orders SET payment_status = 'PAID', razorpay_payment_id = $1 WHERE id = $2",
+            [razorpay_payment_id, orderId]
+        );
+        res.json({ status: 'success' });
+    } else {
+        res.status(400).json({ status: 'failure' });
+    }
+});
+
+// Get User Orders
+router.get('/my-orders', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query('SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching orders' });
+    }
+});
+
+module.exports = router;

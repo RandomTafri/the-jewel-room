@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - The Jewel Room</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body style="background-color: var(--bg-alt);">
+
+    <!-- Login Screen -->
+    <div id="login-panel" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+        <div
+            style="background: #fff; padding: 40px; width: 100%; max-width: 400px; border-radius: var(--radius); box-shadow: var(--shadow-lg); text-align: center;">
+            <h2 style="margin-bottom: 30px;">Admin Access</h2>
+            <form onsubmit="adminLogin(event)" style="display: grid; gap: 20px;">
+                <input type="email" name="email" placeholder="Email Address" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <button class="btn" style="width: 100%;">Sign In</button>
+            </form>
+            <p style="margin-top: 20px; font-size: 0.9rem;"><a href="index.html"
+                    style="color: var(--text-light); text-decoration: underline;">Back to Website</a></p>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard Panel -->
+    <div id="admin-panel" class="admin-layout hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2>The Jewel Room</h2>
+            <nav>
+                <button onclick="switchTab('orders')" id="btn-orders" class="active"><i class="fa-solid fa-box"></i>
+                    &nbsp; Orders</button>
+                <button onclick="switchTab('products')" id="btn-products"><i class="fa-solid fa-gem"></i> &nbsp;
+                    Products</button>
+                <button onclick="switchTab('categories')" id="btn-categories"><i class="fa-solid fa-list"></i> &nbsp;
+                    Categories</button>
+                <button onclick="switchTab('brochures')" id="btn-brochures"><i class="fa-solid fa-file-pdf"></i> &nbsp;
+                    Brochures</button>
+            </nav>
+            <div style="margin-top: auto;">
+                <a href="index.html"
+                    style="color: #aaa; font-size: 0.85rem; display: block; padding: 15px; text-transform: uppercase; letter-spacing: 1px;"><i
+                        class="fa-solid fa-arrow-left"></i> &nbsp; Back to Site</a>
+                <button onclick="logout()"
+                    style="background:none; border:none; color: #aaa; text-transform: uppercase; letter-spacing: 1px; padding: 15px; cursor: pointer; text-align: left; width: 100%; font-size: 0.85rem;"><i
+                        class="fa-solid fa-sign-out-alt"></i> &nbsp; Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-content">
+
+            <!-- Orders View -->
+            <div id="tab-orders" class="tab-content">
+                <div class="admin-header">
+                    <h3>Recent Orders</h3>
+                    <button onclick="loadAdminOrders()" class="btn-outline"><i class="fa-solid fa-rotate"></i>
+                        Refresh</button>
+                </div>
+                <div id="admin-orders-list"></div>
+            </div>
+
+            <!-- Products View -->
+            <div id="tab-products" class="tab-content hidden">
+                <div class="admin-header">
+                    <h3>Product Inventory</h3>
+                    <button onclick="showProductModal()" class="btn"><i class="fa-solid fa-plus"></i> Add
+                        Product</button>
+                </div>
+                <div id="admin-products-list" class="grid"
+                    style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));"></div>
+            </div>
+
+            <!-- Categories View -->
+            <div id="tab-categories" class="tab-content hidden">
+                <div class="admin-header">
+                    <h3>Categories</h3>
+                    <button onclick="showCategoryModal()" class="btn"><i class="fa-solid fa-plus"></i> Add
+                        Category</button>
+                </div>
+                <div id="admin-categories-list"></div>
+            </div>
+
+            <!-- Brochures View -->
+            <div id="tab-brochures" class="tab-content hidden">
+                <div class="admin-header">
+                    <h3>Brochures & Catalogs</h3>
+                    <button onclick="showBrochureModal()" class="btn"><i class="fa-solid fa-upload"></i> Upload
+                        Details</button>
+                </div>
+                <div id="admin-brochures-list" class="grid"
+                    style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"></div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Product Modal -->
+    <div id="product-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="flex justify-between items-center mb-20">
+                <h3 id="p-modal-title" style="margin: 0;">Add Product</h3>
+                <button onclick="closeModal('product-modal')"
+                    style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <form onsubmit="saveProduct(event)" style="display: grid; gap: 15px;">
+                <input type="hidden" id="p-id">
+                <input type="text" id="p-name" placeholder="Product Name" required>
+                <textarea id="p-desc" placeholder="Description" rows="3"></textarea>
+                <div class="flex" style="gap: 15px;">
+                    <input type="number" id="p-price" placeholder="Price" step="0.01" required>
+                    <input type="number" id="p-stock" placeholder="Stock Qty" required>
+                </div>
+                <select id="p-cat" required>
+                    <option value="">Select Category</option>
+                </select>
+                <div>
+                    <label style="font-size: 0.85rem; color: #666; margin-bottom: 5px; display: block;">Product
+                        Image</label>
+                    <input type="file" id="p-file">
+                    <p style="text-align: center; margin: 5px 0;">- OR -</p>
+                    <input type="text" id="p-img" placeholder="Image URL (Manual)">
+                </div>
+                <button type="submit" class="btn">Save Product</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div id="category-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="flex justify-between items-center mb-20">
+                <h3 style="margin: 0;">Add Category</h3>
+                <button onclick="closeModal('category-modal')"
+                    style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <form onsubmit="saveCategory(event)" style="display: grid; gap: 15px;">
+                <input type="text" id="cat-name" placeholder="Category Name" required>
+                <div>
+                    <label style="font-size: 0.85rem; color: #666; margin-bottom: 5px; display: block;">Cover
+                        Image</label>
+                    <input type="file" id="cat-file">
+                </div>
+                <button type="submit" class="btn">Create Category</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Brochure Modal -->
+    <div id="brochure-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="flex justify-between items-center mb-20">
+                <h3 style="margin: 0;">Upload Brochure</h3>
+                <button onclick="closeModal('brochure-modal')"
+                    style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <form onsubmit="uploadBrochure(event)" style="display: grid; gap: 15px;">
+                <input type="text" id="b-title" placeholder="Title (e.g., Summer Collection)" required>
+                <input type="url" id="b-link" placeholder="Brochure Link (e.g., Google Drive)" class="input-field"
+                    required style="padding: 10px; border: 1px solid #ddd;">
+                <div>
+                    <label style="font-size: 0.85rem; color: #666; margin-bottom: 5px; display: block;">Thumbnail
+                        Image</label>
+                    <input type="file" id="b-file" required accept="image/*">
+                </div>
+                <button type="submit" class="btn">Add Brochure</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                State.token = token;
+                initAdmin();
+            }
+        });
+
+        async function adminLogin(e) {
+            e.preventDefault();
+            const email = e.target.email.value;
+            const password = e.target.password.value;
+
+            try {
+                const res = await API.post('/auth/admin/login', { email, password });
+                localStorage.setItem('token', res.token);
+                State.token = res.token;
+                initAdmin();
+            } catch (err) {
+                alert('Invalid Credentials');
+            }
+        }
+
+        function initAdmin() {
+            document.getElementById('login-panel').classList.add('hidden');
+            document.getElementById('admin-panel').classList.remove('hidden');
+            loadAdminOrders();
+            loadCategoryDropdown();
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            location.reload();
+        }
+
+        function switchTab(tab) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            // Remove active class from nav
+            document.querySelectorAll('.sidebar nav button').forEach(el => el.classList.remove('active'));
+
+            // Show selected
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+            document.getElementById('btn-' + tab).classList.add('active');
+
+            if (tab === 'orders') loadAdminOrders();
+            if (tab === 'products') { loadAdminProducts(); loadCategoryDropdown(); }
+            if (tab === 'categories') loadAdminCategories();
+            if (tab === 'brochures') loadAdminBrochures();
+        }
+
+        // --- Modals ---
+        function showProductModal(product = null) {
+            document.getElementById('product-modal').classList.remove('hidden');
+            const form = document.querySelector('#product-modal form');
+            form.reset();
+
+            if (product) {
+                document.getElementById('p-modal-title').innerText = 'Edit Product';
+                document.getElementById('p-id').value = product.id;
+                document.getElementById('p-name').value = product.name;
+                document.getElementById('p-desc').value = product.description;
+                document.getElementById('p-price').value = product.price;
+                document.getElementById('p-stock').value = product.stock;
+                document.getElementById('p-cat').value = product.category;
+                document.getElementById('p-img').value = product.image_url;
+            } else {
+                document.getElementById('p-modal-title').innerText = 'Add Product';
+                document.getElementById('p-id').value = '';
+            }
+        }
+
+        function showCategoryModal() {
+            document.getElementById('category-modal').classList.remove('hidden');
+            document.querySelector('#category-modal form').reset();
+        }
+
+        function showBrochureModal() {
+            document.getElementById('brochure-modal').classList.remove('hidden');
+            document.querySelector('#brochure-modal form').reset();
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // --- Data Logic (Same as before but with cleaner HTML gen) ---
+
+        async function loadAdminOrders() {
+            const orders = await API.get('/admin/orders');
+            const container = document.getElementById('admin-orders-list');
+            if (orders.length === 0) { container.innerHTML = '<p class="text-center text-light">No orders found.</p>'; return; }
+
+            container.innerHTML = `<table>
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${orders.map(o => `
+                        <tr>
+                            <td>#${o.id}</td>
+                            <td>${o.customer_name}<br><small style="color:#888">${o.created_at.split('T')[0]}</small></td>
+                            <td><strong>${formatPrice(o.total_amount)}</strong></td>
+                            <td>
+                                <select onchange="updateStatus(${o.id}, this.value)" style="padding: 5px; font-size: 0.9rem;">
+                                    <option value="PLACED" ${o.order_status === 'PLACED' ? 'selected' : ''}>PLACED</option>
+                                    <option value="SHIPPED" ${o.order_status === 'SHIPPED' ? 'selected' : ''}>SHIPPED</option>
+                                    <option value="DELIVERED" ${o.order_status === 'DELIVERED' ? 'selected' : ''}>DELIVERED</option>
+                                    <option value="CANCELLED" ${o.order_status === 'CANCELLED' ? 'selected' : ''}>CANCELLED</option>
+                                </select>
+                            </td>
+                            <td><button onclick="viewOrder(${o.id})" class="btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">Details</button></td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`;
+        }
+
+        async function updateStatus(id, status) {
+            try {
+                await API.put(`/admin/orders/${id}/status`, { status });
+                // Optional: Toast message
+            } catch (e) { alert('Error updating status'); }
+        }
+
+        async function loadAdminProducts() {
+            const products = await API.get('/products');
+            const container = document.getElementById('admin-products-list');
+            container.innerHTML = products.map(p => `
+                <div class="product-card" style="padding: 15px;">
+                    <div style="height: 150px; overflow:hidden; border-radius: 4px; margin-bottom: 10px;">
+                        <img src="${p.image_url || 'https://via.placeholder.com/200'}" style="height: 100%; object-fit: cover;">
+                    </div>
+                    <h4 style="font-size: 1rem; margin-bottom: 5px;">${p.name}</h4>
+                    <p style="font-size: 0.9rem;">${formatPrice(p.price)}</p>
+                    <div class="flex" style="gap: 10px; margin-top: 10px;">
+                        <button onclick='showProductModal(${JSON.stringify(p).replace(/'/g, "")})' class="btn-outline" style="flex:1; padding: 5px;">Edit</button>
+                        <button onclick="deleteProduct(${p.id})" class="btn-danger" style="flex:1; padding: 5px;">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadCategoryDropdown() {
+            try {
+                const cats = await API.get('/categories');
+                const select = document.getElementById('p-cat');
+                select.innerHTML = '<option value="">Select Category</option>' +
+                    cats.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+            } catch (e) { }
+        }
+
+        async function saveProduct(e) {
+            e.preventDefault();
+            const id = document.getElementById('p-id').value;
+            const formData = new FormData();
+            formData.append('name', document.getElementById('p-name').value);
+            formData.append('description', document.getElementById('p-desc').value);
+            formData.append('price', document.getElementById('p-price').value);
+            formData.append('category', document.getElementById('p-cat').value);
+            formData.append('stock', document.getElementById('p-stock').value);
+
+            const manualUrl = document.getElementById('p-img').value;
+            if (manualUrl) formData.append('image_url', manualUrl);
+            const file = document.getElementById('p-file').files[0];
+            if (file) formData.append('image', file);
+
+            try {
+                if (id) {
+                    // Edit
+                    const data = Object.fromEntries(formData.entries());
+                    // Remove file object if strictly JSON PUT, but let's stick to our known limitation or try-catch
+                    // Previous logic: PUT expects JSON. 
+                    const json = {
+                        name: data.name, description: data.description, price: data.price,
+                        category: data.category, stock: data.stock, image_url: manualUrl
+                    };
+                    await API.put(`/products/${id}`, json);
+                } else {
+                    const token = localStorage.getItem('token');
+                    await fetch('/api/products', {
+                        method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData
+                    });
+                }
+                closeModal('product-modal');
+                loadAdminProducts();
+            } catch (e) { alert('Operation failed'); }
+        }
+
+        async function deleteProduct(id) {
+            if (confirm('Delete product?')) {
+                await API.delete(`/products/${id}`);
+                loadAdminProducts();
+            }
+        }
+
+        async function loadAdminCategories() {
+            const cats = await API.get('/categories');
+            const container = document.getElementById('admin-categories-list');
+            container.innerHTML = `
+                <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+                    ${cats.map(c => `
+                        <div style="background: #fff; padding: 15px; border-radius: 6px; box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 15px;">
+                             <img src="/api/categories/${c.id}/image" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" onerror="this.style.display='none'">
+                             <div style="flex-grow: 1;">
+                                 <h4 style="font-size: 1rem; margin: 0;">${c.name}</h4>
+                             </div>
+                             <button onclick="deleteCategory(${c.id})" class="btn-danger" style="padding: 5px 10px;"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    `).join('')}
+                </div>
+             `;
+        }
+
+        async function saveCategory(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('name', document.getElementById('cat-name').value);
+            const file = document.getElementById('cat-file').files[0];
+            if (file) formData.append('image', file);
+
+            try {
+                const token = localStorage.getItem('token');
+                await fetch('/api/categories', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+                closeModal('category-modal');
+                loadAdminCategories();
+            } catch (e) { alert('Error'); }
+        }
+
+        async function deleteCategory(id) {
+            if (confirm('Delete category?')) {
+                await API.delete(`/categories/${id}`);
+                loadAdminCategories();
+            }
+        }
+
+        async function loadAdminBrochures() {
+            const list = await API.get('/brochures');
+            document.getElementById('admin-brochures-list').innerHTML = list.map(b => `
+                <div style="background: #fff; padding: 15px; border-radius: 6px; text-align: center; box-shadow: var(--shadow-sm);">
+                    <div style="height: 150px; overflow:hidden; border-radius: 4px; margin-bottom: 10px; border: 1px solid #eee;">
+                         <img src="/api/brochures/${b.id}/thumbnail" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://via.placeholder.com/200?text=PDF'">
+                    </div>
+                    <h4 style="font-size: 0.9rem; margin-bottom: 10px;">${b.title}</h4>
+                    <div class="flex" style="gap: 5px;">
+                        <a href="${b.link || '#'}" target="_blank" class="btn-outline" style="flex:1; padding: 5px; font-size: 0.8rem;">View Link</a>
+                        <button onclick="deleteBrochure(${b.id})" class="btn-danger" style="flex:1; padding: 5px;">Delete</button>
+                    </div>
+                </div>
+             `).join('');
+        }
+
+        async function uploadBrochure(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('title', document.getElementById('b-title').value);
+            formData.append('link', document.getElementById('b-link').value);
+            formData.append('image', document.getElementById('b-file').files[0]);
+            try {
+                const token = localStorage.getItem('token');
+                await fetch('/api/brochures', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+                closeModal('brochure-modal');
+                loadAdminBrochures();
+            } catch (e) { alert('Upload failed'); }
+        }
+
+        async function deleteBrochure(id) {
+            if (confirm('Delete?')) {
+                await API.delete(`/brochures/${id}`);
+                loadAdminBrochures();
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account - The Jewel Room</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <div class="container flex justify-between items-center">
+            <div class="logo"><a href="index.html">
+                    <h1>The Jewel Room</h1>
+                </a></div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="shop.html">Shop</a></li>
+                    <li><a href="cart.html">Cart (<span id="cart-count">0</span>)</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container section">
+
+        <!-- Auth Forms -->
+        <div id="auth-forms" class="hidden">
+            <div class="flex" style="gap: 50px; justify-content: center;">
+                <div style="flex: 1; max-width: 400px;">
+                    <h3>Login</h3>
+                    <form onsubmit="handleLogin(event)" style="display: grid; gap: 10px;">
+                        <input type="email" name="email" placeholder="Email" required class="input-field"
+                            style="padding: 10px;">
+                        <input type="password" name="password" placeholder="Password" required class="input-field"
+                            style="padding: 10px;">
+                        <button type="submit" class="btn">Login</button>
+                    </form>
+                </div>
+                <div style="width: 1px; background: #eee;"></div>
+                <div style="flex: 1; max-width: 400px;">
+                    <h3>Register</h3>
+                    <form onsubmit="handleRegister(event)" style="display: grid; gap: 10px;">
+                        <input type="text" name="name" placeholder="Full Name" required class="input-field"
+                            style="padding: 10px;">
+                        <input type="email" name="email" placeholder="Email" required class="input-field"
+                            style="padding: 10px;">
+                        <input type="tel" name="phone" placeholder="Phone" class="input-field" style="padding: 10px;">
+                        <input type="password" name="password" placeholder="Password" required class="input-field"
+                            style="padding: 10px;">
+                        <button type="submit" class="btn btn-outline">Register</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Dashboard -->
+        <div id="dashboard" class="hidden">
+            <div class="flex justify-between items-center">
+                <h2>My Account</h2>
+                <button onclick="App.logout()" class="btn-outline">Logout</button>
+            </div>
+            <p>Welcome, <span id="user-name"></span></p>
+
+            <h3 style="margin-top: 40px;">Order History</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                <thead>
+                    <tr style="text-align: left; border-bottom: 2px solid #eee;">
+                        <th style="padding: 10px;">Order ID</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Amount</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="order-history">
+                    <tr>
+                        <td colspan="5">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await App.init();
+
+            if (State.user) {
+                showDashboard();
+            } else {
+                document.getElementById('auth-forms').classList.remove('hidden');
+            }
+        });
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = e.target.email.value;
+            const password = e.target.password.value;
+            try {
+                await App.login(email, password);
+                // App.login redirects to index, but if we are here let's reload or check redirect
+                const params = new URLSearchParams(window.location.search);
+                const redirect = params.get('redirect');
+                if (redirect) window.location.href = redirect;
+                else showDashboard();
+            } catch (err) {
+                alert('Login failed: ' + err.message);
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const data = {
+                name: e.target.name.value,
+                email: e.target.email.value,
+                phone: e.target.phone.value,
+                password: e.target.password.value
+            };
+            try {
+                const res = await API.post('/auth/register', data);
+                // Auto login
+                await App.login(data.email, data.password);
+                const params = new URLSearchParams(window.location.search);
+                const redirect = params.get('redirect');
+                if (redirect) window.location.href = redirect;
+                else showDashboard();
+            } catch (err) {
+                alert('Registration failed: ' + err.message);
+            }
+        }
+
+        async function showDashboard() {
+            document.getElementById('auth-forms').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('user-name').innerText = State.user.name;
+
+            // Fetch Orders
+            try {
+                const orders = await API.get('/orders/my-orders');
+                const tbody = document.getElementById('order-history');
+
+                if (orders.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5">No orders yet.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = orders.map(o => `
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 10px;">#${o.id}</td>
+                        <td>${new Date(o.created_at).toLocaleDateString()}</td>
+                        <td>${o.order_status}</td>
+                        <td>${formatPrice(o.total_amount)}</td>
+                        <td>
+                            <!-- WhatsApp link generation logic -->
+                            <a href="#" onclick="openWhatsApp(${o.id})" style="color: var(--success);">WhatsApp</a>
+                        </td>
+                    </tr>
+                `).join('');
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function openWhatsApp(orderId) {
+            // Generate message
+            // Ideally we pass order details, but for now just ID
+            const msg = `Hi, checking on my order #${orderId}`;
+            const url = `https://wa.me/${State.config.whatsappNumber}?text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+
+</html>

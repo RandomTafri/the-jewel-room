@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wishlist - The Jewel Room</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <header>
+        <div class="container flex justify-between items-center">
+            <div class="logo">
+                <a href="index.html">
+                    <h1>The Jewel Room</h1>
+                </a>
+            </div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="shop.html">Shop</a></li>
+                    <li><a href="brochures.html">Brochures</a></li>
+                    <li><a href="cart.html">Cart (<span id="cart-count">0</span>)</a></li>
+                    <li id="auth-links"><a href="account.html">Login</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="section" style="min-height: 60vh;">
+        <div class="container">
+            <h2 class="text-center">My Wishlist</h2>
+            <div id="wishlist-container" class="grid"
+                style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); margin-top: 40px;">
+                <p class="text-center" style="grid-column: 1/-1;">Loading...</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container text-center">
+            <p>&copy; 2024 The Jewel Room. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadWishlist();
+        });
+
+        async function loadWishlist() {
+            try {
+                const items = await API.get('/wishlist');
+                const container = document.getElementById('wishlist-container');
+
+                if (items.length === 0) {
+                    container.innerHTML = `
+                        <div style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                            <i class="fa-regular fa-heart" style="font-size: 3rem; color: #ddd; margin-bottom: 20px;"></i>
+                            <p>Your wishlist is empty.</p>
+                            <a href="shop.html" class="btn mt-20">Browse Products</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = items.map(p => {
+                    const isOutOfStock = p.stock <= 0;
+                    return `
+                    <div class="product-card" style="position: relative; opacity: ${isOutOfStock ? '0.7' : '1'}">
+                        <img src="${p.image_url || 'https://via.placeholder.com/200'}" alt="${p.name}" style="${isOutOfStock ? 'filter: grayscale(100%);' : ''}">
+                        
+                        ${isOutOfStock ? `<div style="position: absolute; top: 10px; left: 10px; background: #333; color: white; padding: 5px 10px; font-size: 0.8rem; border-radius: 4px;">Out of Stock</div>` : ''}
+                        
+                        <button onclick="removeFromWishlist(${p.id}, this)" style="position: absolute; top: 10px; right: 10px; background: white; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                            <i class="fa-solid fa-trash" style="color: #e74c3c;"></i>
+                        </button>
+
+                        <div class="card-info">
+                            <h4>${p.name}</h4>
+                            <p>${formatPrice(p.price)}</p>
+                            ${!isOutOfStock ?
+                            `<a href="product.html?id=${p.id}" class="btn-outline">View</a>` :
+                            `<button disabled class="btn-outline" style="cursor: not-allowed; opacity: 0.5;">Unavailable</button>`
+                        }
+                        </div>
+                    </div>
+                `}).join('');
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('wishlist-container').innerHTML = '<p class="text-center text-danger">Error loading wishlist.</p>';
+            }
+        }
+
+        async function removeFromWishlist(pid, btn) {
+            // Optimistic UI removal
+            const card = btn.closest('.product-card');
+            card.remove();
+
+            try {
+                await API.post(`/wishlist/${pid}`); // POST toggles, so if it's there it removes
+                // Check if empty
+                if (document.querySelectorAll('.product-card').length === 0) {
+                    loadWishlist(); // Re-render empty state
+                }
+            } catch (e) {
+                alert('Error removing item');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+
+</html>

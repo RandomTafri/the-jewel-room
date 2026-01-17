@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details - The Jewel Room</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <div class="container flex justify-between items-center">
+            <div class="logo"><a href="index.html">
+                    <h1>The Jewel Room</h1>
+                </a></div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="shop.html">Shop</a></li>
+                    <li><a href="brochures.html">Brochures</a></li>
+                    <li><a href="cart.html">Cart (<span id="cart-count">0</span>)</a></li>
+                    <li id="auth-links"><a href="account.html">Login</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container section">
+        <div id="product-detail" class="flex" style="gap: 50px;">
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await App.init();
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+
+            if (!id) {
+                document.getElementById('product-detail').innerHTML = '<p>Product not found</p>';
+                return;
+            }
+
+            try {
+                const product = await API.get('/products/' + id);
+                document.title = `${product.name} - The Jewel Room`;
+
+                document.getElementById('product-detail').innerHTML = `
+                    <div style="flex: 1;">
+                        <img src="${product.image_url || 'https://via.placeholder.com/400'}" alt="${product.name}" style="width: 100%; border-radius: 5px;">
+                    </div>
+                    <div style="flex: 1;">
+                        <h2 style="margin-bottom: 10px;">${product.name}</h2>
+                        <h4 style="color: var(--primary-color); margin-bottom: 20px;">${formatPrice(product.price)}</h4>
+                        <p style="margin-bottom: 20px; line-height: 1.6; color: #555;">${product.description || 'No description available.'}</p>
+                        
+                        <p style="margin-bottom: 20px;"><strong>Stock:</strong> ${product.stock > 0 ? product.stock + ' units' : 'Out of Stock'}</p>
+
+                        ${product.stock > 0 ? `
+                            <button onclick="addToCart(${product.id})" class="btn">Add to Cart</button>
+                        ` : `
+                            <button class="btn" disabled style="background:#ccc; cursor:not-allowed;">Out of Stock</button>
+                        `}
+                    </div>
+                `;
+            } catch (err) {
+                document.getElementById('product-detail').innerHTML = '<p>Product not found</p>';
+            }
+        });
+
+        async function addToCart(id) {
+            try {
+                if (State.token) {
+                    await API.post('/cart', { productId: id, quantity: 1 });
+                } else {
+                    // Guest
+                    let items = JSON.parse(localStorage.getItem('guest_cart') || '[]');
+                    const existing = items.find(i => i.product_id === id);
+                    if (existing) existing.quantity++;
+                    else items.push({ product_id: id, quantity: 1 });
+                    localStorage.setItem('guest_cart', JSON.stringify(items));
+                    updateCartCount();
+                }
+                alert('Added to cart');
+            } catch (e) {
+                console.error(e);
+                alert('Error adding to cart');
+            }
+        }
+    </script>
+</body>
+
+</html>
