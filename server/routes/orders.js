@@ -5,10 +5,22 @@ const { authenticateToken, isAdmin } = require('../middleware/auth');
 const Razorpay = require('razorpay');
 require('dotenv').config();
 
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET
-});
+//const razorpay = new Razorpay({
+//    key_id: process.env.RAZORPAY_KEY_ID,
+//    key_secret: process.env.RAZORPAY_KEY_SECRET
+//});
+
+const Razorpay = require("razorpay");
+
+const key_id = process.env.RAZORPAY_KEY_ID;
+const key_secret = process.env.RAZORPAY_KEY_SECRET;
+
+const razorpay =
+  key_id && key_secret
+    ? new Razorpay({ key_id, key_secret })
+    : null;
+
+// In routes: if (!razorpay) return 503 with message "Razorpay not configured"
 
 // Create Order
 router.post('/', authenticateToken, async (req, res) => {
