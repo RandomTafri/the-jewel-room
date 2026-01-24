@@ -1,0 +1,75 @@
+/* Mobile Category List - Show all categories with auto-hiding scrollbar */
+.shop-mobile-list {
+    display: none;
+}
+
+@media (max-width: 768px) {
+
+    /* Hide desktop columns on mobile */
+    .shop-columns {
+        display: none !important;
+    }
+
+    /* Show mobile scrollable list */
+    .shop-mobile-list {
+        display: flex;
+        gap: 15px;
+        overflow-x: auto;
+        padding: 10px 0;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .shop-mobile-list li {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    .shop-mobile-list a {
+        padding: 8px 16px;
+        background: rgba(212, 175, 55, 0.1);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        border-radius: 20px;
+        display: inline-block;
+        transition: all 0.3s;
+    }
+
+    .shop-mobile-list a:hover {
+        background: rgba(212, 175, 55, 0.2);
+        border-color: var(--accent-color);
+    }
+
+    /* Auto-hiding scrollbar with fade effect */
+    .shop-mobile-list::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .shop-mobile-list::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+
+    .shop-mobile-list::-webkit-scrollbar-thumb {
+        background: var(--accent-color);
+        border-radius: 10px;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    }
+
+    /* Fade out scrollbar after 1 second */
+    .shop-mobile-list:not(:hover):not(:active) {
+        scrollbar-color: transparent transparent;
+    }
+
+    .shop-mobile-list:not(:hover):not(:active)::-webkit-scrollbar-thumb {
+        opacity: 0;
+        transition: opacity 0.6s ease 1s;
+    }
+
+    /* Show scrollbar instantly on hover/scroll */
+    .shop-mobile-list:hover::-webkit-scrollbar-thumb,
+    .shop-mobile-list:active::-webkit-scrollbar-thumb {
+        opacity: 1;
+        transition: opacity 0.1s ease;
+    }
+}

@@ -161,6 +161,11 @@ header .logo h1 {
     color: var(--primary-color);
 }
 
+header .logo img {
+    /* Fix: Remove vertical line from image source */
+    clip-path: inset(0 2px 0 0);
+}
+
 .nav-links {
     display: flex;
     gap: 30px;
@@ -555,11 +560,138 @@ tr:hover {
     position: relative;
 }
 
+/* Footer - Minimal Luxury Design */
 footer {
-    background-color: #111;
-    color: #888;
-    padding: 60px 0;
-    margin-top: 60px;
+    background-color: #1a1a1a;
+    color: #999;
+    margin-top: 80px;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 20px 20px;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 60px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.footer-logo {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    color: #fff;
+    margin: 0;
+    letter-spacing: 2px;
+}
+
+.footer-social {
+    display: flex;
+    gap: 15px;
+}
+
+.footer-social a {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(212, 175, 55, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #D4AF37;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.footer-social a:hover {
+    background-color: #D4AF37;
+    color: #1a1a1a;
+    transform: translateY(-3px);
+}
+
+.footer-contact {
+    font-size: 0.9rem;
+    line-height: 1.8;
+}
+
+.footer-contact p {
+    margin: 5px 0;
+}
+
+.footer-contact a {
+    color: #D4AF37;
+    text-decoration: none;
+}
+
+.footer-contact a:hover {
+    text-decoration: underline;
+}
+
+.footer-links-section h3 {
+    font-family: var(--font-heading);
+    font-size: 0.9rem;
+    color: #fff;
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+    font-weight: 600;
+}
+
+.footer-links-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-links-section ul li {
+    margin-bottom: 12px;
+}
+
+.footer-links-section ul li a {
+    color: #999;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+.footer-links-section ul li a:hover {
+    color: #D4AF37;
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 30px;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+/* Responsive Footer */
+@media (max-width: 768px) {
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .footer-brand {
+        text-align: center;
+    }
+
+    .footer-social {
+        justify-content: center;
+    }
+
+    .footer-links-section {
+        text-align: center;
+    }
 }
 
 /* Auth Dropdown */
@@ -652,4 +784,435 @@ footer {
 
 .auth-icon-btn:hover {
     color: var(--accent-color);
+}
+/* Dynamic Shop Footer Columns */
+.shop-columns {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap; /* allow wrapping if too many columns */
+}
+
+/* Mobile responsiveness for footer columns */
+@media (max-width: 768px) {
+    .shop-columns {
+        flex-direction: column;
+        gap: 0;
+    }
+}
+
+/* Mobile Grid Fixes & Button Alignment */
+.product-grid {
+    display: grid;
+    gap: 30px;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+
+.product-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.product-card img {
+    width: 100%;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+    height: auto; /* Override fixed height */
+}
+
+/* Ensure inner content fills space so button can be pushed down */
+.card-info {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    justify-content: space-between;
+}
+
+.card-info .btn-outline {
+    margin-top: auto;
+    width: 100%;
+}
+
+/* Mobile Specific Overrides */
+@media (max-width: 768px) {
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 15px !important;
+    }
+    
+    /* Adjust font sizes for 2-column mobile view if needed */
+    .product-card h4 {
+        font-size: 0.9rem;
+    }
+    
+    .product-card p {
+        font-size: 0.9rem;
+    }
+}
+
+/* Mobile Header & Sidebar Styles */
+.mobile-dynamic-header {
+    transition: transform 0.3s ease;
+}
+
+.header-hidden {
+    transform: translateY(-100%);
+}
+
+.mobile-hamburger-btn {
+    display: none; /* Hidden on Desktop */
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+.mobile-sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px; /* Hidden default */
+    width: 280px;
+    height: 100vh;
+    background: #fff;
+    z-index: 2000;
+    transition: left 0.3s ease;
+    padding: 20px;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.mobile-sidebar.open {
+    left: 0;
+}
+
+.mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s;
+}
+
+.mobile-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.mobile-sidebar-close {
+    align-self: flex-end;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+.mobile-nav-links {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.mobile-nav-links li a {
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: 600;
+    display: block;
+    width: 100%;
+}
+
+.no-scroll {
+    overflow: hidden;
+}
+
+/* Mobile Specific Header Tweaks */
+@media (max-width: 768px) {
+    .mobile-hamburger-btn {
+        display: block;
+    }
+
+    /* Hide default nav on mobile */
+    header nav {
+        display: none;
+    }
+    
+    /* Adjust header layout */
+    header .container {
+        display: grid;
+        grid-template-columns: 40px auto 40px; /* Hamburger - Logo - Cart/Empty */
+        align-items: center;
+        padding: 10px 20px;
+    }
+    
+    header .logo {
+        text-align: center;
+        justify-self: center; /* Center logo in grid cell */
+    }
+    
+    /* Ensure logo image and text wrap correctly or hide text if too long */
+    header .logo a {
+        flex-direction: column; /* Stack logo elements if needed */
+        justify-content: center;
+    }
+    
+    header .logo span {
+        font-size: 1rem !important; /* Smaller text on mobile */
+        margin-top: 5px;
+        display: none; /* Hide text on mobile if it causes overflow, usually cleaner */
+    }
+    
+    /* If user wants Logo + Text, we might need to adjust width */
+    /* Let's keep text but very small? Or hide? Standard mobile pattern is just Logo icon or stacked. */
+    /* User said "Logo in center". */
+    
+    /* Force Cart to be visible if it was inside nav? No, Cart link is usually separate or in nav. */
+    /* Wait, Cart is currently INSIDE nav -> ul.nav-links -> li. */
+    /* If I hide 'header nav', I hide the Cart too! */
+    /* I need to extract Cart to the right side manually or cloning. */
+    
+    /* My JS clone duplicates the whole list to sidebar. */
+    /* But the header needs the Cart icon on the right. */
+}
+
+/* Mobile Cart & Right Icons */
+.mobile-right-icons {
+    display: none; /* Desktop hidden */
+}
+
+@media (max-width: 768px) {
+    .mobile-right-icons {
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    .mobile-right-icons a {
+        color: var(--text-color);
+        font-size: 1.2rem;
+        position: relative;
+    }
+    
+    .mobile-cart-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: var(--accent-color);
+        color: #fff;
+        font-size: 0.7rem;
+        padding: 2px 5px;
+        border-radius: 50%;
+    }
+    
+    /* Ensure only Cart Icon is shown, no text "Cart" if cloned weirdly */
+    /* My JS sets innerHTML to icon + badge, so this is safe */
+}
+
+/* Shop Layout */
+.shop-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 30px;
+}
+
+.shop-sidebar {
+    width: 250px;
+    flex-shrink: 0;
+    border-right: 1px solid #eee;
+    padding-right: 20px;
+}
+
+@media (max-width: 768px) {
+    .shop-layout {
+        flex-direction: column;
+    }
+    
+    .shop-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #eee;
+        padding-right: 0;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+    }
+}
+
+/* Layout Refinement - More Breathing Room */
+@media (max-width: 768px) {
+    .shop-sidebar {
+        padding-bottom: 40px !important;
+        margin-bottom: 40px !important;
+        border-bottom: 1px solid #ddd !important; /* Slightly visible border */
+    }
+    
+    .shop-layout {
+        gap: 40px !important;
+    }
+}
+
+/* Mobile Spacing Fix - Prevent sticking to bezels */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+    }
+    
+    /* Ensure header aligns with body content */
+    header .container {
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+    }
+}
+
+/* Admin Mobile Refactor */
+.mobile-only {
+    display: none;
+}
+
+.mobile-overlay-admin {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+@media (max-width: 768px) {
+    .mobile-only {
+        display: inline-block;
+    }
+    
+    .admin-layout {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -300px;
+        width: 280px;
+        height: 100vh;
+        z-index: 1001;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+    }
+    
+    .sidebar.open {
+        left: 0;
+    }
+    
+    .admin-content {
+        width: 100%;
+        margin-left: 0;
+        padding-top: 20px;
+    }
+    
+    #admin-mobile-toggle {
+        display: block;
+        margin-bottom: 20px;
+    } 
+}
+
+/* Brochure Card Styles - Mirroring Product Card for Grid */
+.brochure-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.brochure-card h4 {
+    flex-grow: 1; /* Pushes button to bottom if title is short */
+    min-height: auto !important; /* Override inline min-height */
+}
+
+@media (max-width: 768px) {
+    .brochure-card h4 {
+        font-size: 0.95rem !important; /* Adjust for mobile */
+    }
+}
+
+/* Mobile Category List - Show all categories with auto-hiding scrollbar */
+.shop-mobile-list {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    /* Hide desktop columns on mobile */
+    .shop-columns {
+        display: none !important;
+    }
+    
+    /* Show mobile scrollable list */
+    .shop-mobile-list {
+        display: flex;
+        gap: 15px;
+        overflow-x: auto;
+        padding: 10px 0;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .shop-mobile-list li {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+    
+    .shop-mobile-list a {
+        padding: 8px 16px;
+        background: rgba(212, 175, 55, 0.1);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        border-radius: 20px;
+        display: inline-block;
+        transition: all 0.3s;
+    }
+    
+    .shop-mobile-list a:hover {
+        background: rgba(212, 175, 55, 0.2);
+        border-color: var(--accent-color);
+    }
+    
+    /* Auto-hiding scrollbar with fade effect */
+    .shop-mobile-list::-webkit-scrollbar {
+        height: 6px;
+    }
+    
+    .shop-mobile-list::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+    
+    .shop-mobile-list::-webkit-scrollbar-thumb {
+        background: var(--accent-color);
+        border-radius: 10px;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    }
+    
+    /* Fade out scrollbar after 1 second */
+    .shop-mobile-list:not(:hover):not(:active) {
+        scrollbar-color: transparent transparent;
+    }
+    
+    .shop-mobile-list:not(:hover):not(:active)::-webkit-scrollbar-thumb {
+        opacity: 0;
+        transition: opacity 0.6s ease 1s;
+    }
+    
+    /* Show scrollbar instantly on hover/scroll */
+    .shop-mobile-list:hover::-webkit-scrollbar-thumb,
+    .shop-mobile-list:active::-webkit-scrollbar-thumb {
+        opacity: 1;
+        transition: opacity 0.1s ease;
+    }
 }

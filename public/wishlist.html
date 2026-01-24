@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Wishlist - The Jewel Room</title>
+    <title>My Wishlist - Shree Roop Creative</title>
+    <link rel="icon" type="image/png" href="images/logo.png">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -13,8 +14,9 @@
     <header>
         <div class="container flex justify-between items-center">
             <div class="logo">
-                <a href="index.html">
-                    <h1>The Jewel Room</h1>
+                <a href="index.html" style="display: flex; align-items: center; text-decoration: none; color: #333;">
+                    <img src="images/logo.png" alt="Shree Roop Creative" style="height: 60px; vertical-align: middle; margin-right: 15px;">
+<span style="font-family: 'Cinzel', serif; font-size: 1.5rem; font-weight: 700; letter-spacing: 1px; color: #d4af37;">Shree Roop Creative</span>
                 </a>
             </div>
             <nav>
@@ -41,11 +43,14 @@
 
     <footer>
         <div class="container text-center">
-            <p>&copy; 2024 The Jewel Room. All rights reserved.</p>
+            <p>&copy; 2024 Shree Roop Creative. All rights reserved.</p>
         </div>
     </footer>
 
+    <footer id="site-footer"></footer>
+
     <script src="js/app.js"></script>
+    <script src="js/footer.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             loadWishlist();
@@ -113,6 +118,7 @@
             }
         }
     </script>
+<script src="js/mobile-header.js"></script>
 </body>
 
 </html>

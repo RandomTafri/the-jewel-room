@@ -1,7 +1,7 @@
 {
   "name": "the-jewel-room",
   "version": "1.0.0",
-  "description": "Ecommerce template for The Jewel Room",
+  "description": "Ecommerce template for Shree Roop Creative",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",

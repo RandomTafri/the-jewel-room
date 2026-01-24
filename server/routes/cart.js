@@ -66,7 +66,7 @@ router.get('/', async (req, res) => {
 });
 
 // Add Item
-router.post('/add', async (req, res) => {
+router.post('/', async (req, res) => {
     const userId = req.headers['authorization'] ? getUserIdFromToken(req) : null;
     const sessionId = req.headers['x-session-id'];
     const { productId, quantity } = req.body;
@@ -75,6 +75,13 @@ router.post('/add', async (req, res) => {
 
     try {
         const cart = await getOrCreateCart(userId, sessionId);
+        const qtyToAdd = parseInt(quantity) || 1;
+
+        // Check Product Stock
+        const productRes = await db.query('SELECT stock FROM products WHERE id = $1', [productId]);
+        if (productRes.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+
+        const availableStock = productRes.rows[0].stock;
 
         // Check if item exists
         const existing = await db.query(
@@ -82,9 +89,18 @@ router.post('/add', async (req, res) => {
             [cart.id, productId]
         );
 
+        let currentQtyInCart = 0;
+        if (existing.rows.length > 0) {
+            currentQtyInCart = existing.rows[0].quantity;
+        }
+
+        if (currentQtyInCart + qtyToAdd > availableStock) {
+            return res.status(400).json({ error: `Insufficient stock. Available: ${availableStock}` });
+        }
+
         if (existing.rows.length > 0) {
             // Update quantity
-            const newQty = existing.rows[0].quantity + parseInt(quantity);
+            const newQty = existing.rows[0].quantity + qtyToAdd;
             await db.query(
                 'UPDATE cart_items SET quantity = $1 WHERE id = $2',
                 [newQty, existing.rows[0].id]
@@ -93,7 +109,7 @@ router.post('/add', async (req, res) => {
             // Insert
             await db.query(
                 'INSERT INTO cart_items (cart_id, product_id, quantity) VALUES ($1, $2, $3)',
-                [cart.id, productId, quantity]
+                [cart.id, productId, qtyToAdd]
             );
         }
         res.json({ message: 'Added to cart' });

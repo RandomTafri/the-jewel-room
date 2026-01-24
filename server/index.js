@@ -20,6 +20,8 @@ const adminRoutes = require('./routes/admin'); // Admin specific actions not cov
 const brochureRoutes = require('./routes/brochures');
 const categoryRoutes = require('./routes/categories');
 const wishlistRoutes = require('./routes/wishlist');
+const footerRoutes = require('./routes/footer');
+const infoPages = require('./routes/info-pages');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
@@ -29,6 +31,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/brochures', brochureRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/footer', footerRoutes);
+app.use('/api/info-pages', infoPages);
 
 // Config endpoint for frontend
 const config = require('../config');

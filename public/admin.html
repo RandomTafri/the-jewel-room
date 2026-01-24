@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - The Jewel Room</title>
+    <title>Admin Dashboard - Shree Roop Creative</title>
+    <link rel="icon" type="image/png" href="images/logo.png">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -29,8 +30,13 @@
     <!-- Admin Dashboard Panel -->
     <div id="admin-panel" class="admin-layout hidden">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <h2>The Jewel Room</h2>
+        <aside class="sidebar" id="admin-sidebar">
+            <h2 class="flex justify-between items-center">
+                Shree Roop Creative
+                <button onclick="toggleAdminSidebar()" class="mobile-only"
+                    style="background:none; border:none; color:white; font-size:1.2rem;"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </h2>
             <nav>
                 <button onclick="switchTab('orders')" id="btn-orders" class="active"><i class="fa-solid fa-box"></i>
                     &nbsp; Orders</button>
@@ -40,10 +46,12 @@
                     Categories</button>
                 <button onclick="switchTab('brochures')" id="btn-brochures"><i class="fa-solid fa-file-pdf"></i> &nbsp;
                     Brochures</button>
+                <button onclick="switchTab('footer')" id="btn-footer"><i class="fa-solid fa-link"></i> &nbsp;
+                    Footer Links</button>
             </nav>
             <div style="margin-top: auto;">
                 <a href="index.html"
-                    style="color: #aaa; font-size: 0.85rem; display: block; padding: 15px; text-transform: uppercase; letter-spacing: 1px;"><i
+                    style="color: #aaa; font-size: 0.85rem; display: block; padding: 15px; text-transform: uppercase; letter-spacing: 1px; color: #d4af37;"><i
                         class="fa-solid fa-arrow-left"></i> &nbsp; Back to Site</a>
                 <button onclick="logout()"
                     style="background:none; border:none; color: #aaa; text-transform: uppercase; letter-spacing: 1px; padding: 15px; cursor: pointer; text-align: left; width: 100%; font-size: 0.85rem;"><i
@@ -51,8 +59,14 @@
             </div>
         </aside>
 
+        <!-- Overlay -->
+        <div id="admin-mobile-overlay" onclick="toggleAdminSidebar()" class="mobile-overlay-admin hidden"></div>
+
         <!-- Main Content -->
         <main class="admin-content">
+            <button id="admin-mobile-toggle" onclick="toggleAdminSidebar()" class="btn mobile-only mb-20">
+                <i class="fa-solid fa-bars"></i> &nbsp; Menu
+            </button>
 
             <!-- Orders View -->
             <div id="tab-orders" class="tab-content">
@@ -71,8 +85,7 @@
                     <button onclick="showProductModal()" class="btn"><i class="fa-solid fa-plus"></i> Add
                         Product</button>
                 </div>
-                <div id="admin-products-list" class="grid"
-                    style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));"></div>
+                <div id="admin-products-list" class="product-grid"></div>
             </div>
 
             <!-- Categories View -->
@@ -96,10 +109,47 @@
                     style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"></div>
             </div>
 
+            <!-- Footer Links View -->
+            <div id="tab-footer" class="tab-content hidden">
+                <div class="admin-header">
+                    <h3>INFO Pages</h3>
+                    <p style="margin-top: 10px; color: #666;">Manage content for footer INFO pages</p>
+                </div>
+                <div id="info-pages-list" style="display: grid; gap: 15px; margin-top: 20px;">
+                    <!-- Pages will be loaded here -->
+                </div>
+            </div>
+
         </main>
     </div>
 
     <!-- Modals -->
+
+    <!-- INFO Page Content Editor Modal -->
+    <div id="info-page-modal" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 800px;">
+            <h3 id="info-page-modal-title">Edit Page Content</h3>
+            <form onsubmit="saveInfoPage(event)">
+                <input type="hidden" id="info-page-id">
+
+                <label>Page Title</label>
+                <input type="text" id="info-page-title" required readonly style="background: #f5f5f5;">
+
+                <label>Content (HTML supported)</label>
+                <textarea id="info-page-content" rows="15" style="font-family: monospace; padding: 10px;"
+                    placeholder="Enter content here... HTML tags like <h2>, <p>, <strong> are supported"></textarea>
+
+                <p style="font-size: 0.85rem; color: #666; margin-top: 5px;">
+                    Tip: Use &lt;h2&gt; for headings, &lt;p&gt; for paragraphs, &lt;strong&gt; for bold text
+                </p>
+
+                <div class="flex" style="gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn">Save Content</button>
+                    <button type="button" onclick="closeModal('info-page-modal')" class="btn-outline">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Product Modal -->
     <div id="product-modal" class="modal-overlay hidden">
@@ -226,6 +276,7 @@
             if (tab === 'products') { loadAdminProducts(); loadCategoryDropdown(); }
             if (tab === 'categories') loadAdminCategories();
             if (tab === 'brochures') loadAdminBrochures();
+            if (tab === 'footer') loadInfoPages();
         }
 
         // --- Modals ---
@@ -455,7 +506,151 @@
                 loadAdminBrochures();
             }
         }
+
+        // INFO Pages Management
+        async function loadInfoPages() {
+            try {
+                const pages = await API.get('/info-pages');
+                const container = document.getElementById('info-pages-list');
+
+                if (pages.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color: #888;">No pages found</p>';
+                    return;
+                }
+
+                container.innerHTML = pages.map(page => `
+                    <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: var(--shadow-sm); border-left: 4px solid var(--accent-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="margin: 0 0 5px 0; color: var(--primary-color);">${page.title}</h4>
+                                <p style="margin: 0; font-size: 0.9rem; color: #666;">
+                                    ${page.content ? '✅ Has content' : '⚠️ No content yet'}
+                                </p>
+                            </div>
+                            <button onclick='editInfoPage(${JSON.stringify(page).replace(/'/g, "&apos;")})' 
+                                    class="btn" style="padding: 10px 20px;">
+                                <i class="fa-solid fa-edit"></i> Edit Content
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function editInfoPage(page) {
+            document.getElementById('info-page-modal-title').innerText = `Edit: ${page.title}`;
+            document.getElementById('info-page-id').value = page.id;
+            document.getElementById('info-page-title').value = page.title;
+            document.getElementById('info-page-content').value = page.content || '';
+            document.getElementById('info-page-modal').classList.remove('hidden');
+        }
+
+        async function saveInfoPage(e) {
+            e.preventDefault();
+            const id = document.getElementById('info-page-id').value;
+            const data = {
+                title: document.getElementById('info-page-title').value,
+                content: document.getElementById('info-page-content').value
+            };
+
+            try {
+                await API.put(`/info-pages/${id}`, data);
+                closeModal('info-page-modal');
+                loadInfoPages();
+                alert('Page content saved successfully!');
+            } catch (e) {
+                alert('Error saving page content');
+            }
+        }
+
+        function toggleAdminSidebar() {
+            const sidebar = document.getElementById('admin-sidebar');
+            const overlay = document.getElementById('admin-mobile-overlay');
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.classList.add('hidden');
+            } else {
+                sidebar.classList.add('open');
+                overlay.classList.remove('hidden');
+            }
+        }
+
+        async function viewOrder(orderId) {
+            try {
+                const order = await API.get(`/admin/orders/${orderId}`);
+
+                let itemsHtml = order.items.map(item => `
+                    <tr>
+                        <td>${item.product_name}</td>
+                        <td>${item.quantity}</td>
+                        <td>${formatPrice(item.price)}</td>
+                        <td>${formatPrice(item.quantity * item.price)}</td>
+                    </tr>
+                `).join('');
+
+                const detailsHtml = `
+                    <div style="max-width: 600px;">
+                        <h3 style="margin-bottom: 20px;">Order #${order.id}</h3>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <p><strong>Customer:</strong> ${order.customer_name}</p>
+                            <p><strong>Email:</strong> ${order.customer_email}</p>
+                            <p><strong>Phone:</strong> ${order.customer_phone || 'N/A'}</p>
+                            <p><strong>Date:</strong> ${new Date(order.created_at).toLocaleString()}</p>
+                            <p><strong>Status:</strong> ${order.order_status}</p>
+                            <p><strong>Payment:</strong> ${order.payment_method} - ${order.payment_status}</p>
+                        </div>
+
+                        <h4 style="margin-bottom: 10px;">Shipping Address</h4>
+                        <p style="margin-bottom: 20px;">
+                            ${order.shipping_address_line1}<br>
+                            ${order.shipping_address_line2 ? order.shipping_address_line2 + '<br>' : ''}
+                            ${order.shipping_city}, ${order.shipping_state} ${order.shipping_pincode}
+                        </p>
+
+                        <h4 style="margin-bottom: 10px;">Order Items</h4>
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid #ddd;">
+                                    <th style="text-align: left; padding: 8px;">Product</th>
+                                    <th style="text-align: center; padding: 8px;">Qty</th>
+                                    <th style="text-align: right; padding: 8px;">Price</th>
+                                    <th style="text-align: right; padding: 8px;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${itemsHtml}
+                            </tbody>
+                        </table>
+
+                        <div style="text-align: right; font-size: 1.1rem;">
+                            <strong>Total Amount: ${formatPrice(order.total_amount)}</strong>
+                        </div>
+                    </div>
+                `;
+
+                // Create modal overlay
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal" style="max-width: 700px;">
+                        ${detailsHtml}
+                        <div style="margin-top: 20px; text-align: center;">
+                            <button onclick="this.closest('.modal-overlay').remove()" class="btn">Close</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                modal.classList.remove('hidden');
+            } catch (e) {
+                console.error(e);
+                alert('Error loading order details');
+            }
+        }
     </script>
+    <script src="js/mobile-header.js"></script>
 </body>
 
 </html>

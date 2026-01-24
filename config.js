@@ -3,10 +3,10 @@
 // Frontend will fetch config from an endpoint or have a specific public config.
 
 module.exports = {
-    appName: "The Jewel Room",
+    appName: "Shree Roop Creative",
     currencySymbol: "₹",
-    supportEmail: "support@thejewelroom.com",
-    supportPhone: "+919876543210",
+    supportEmail: "shreeroopcreative@gmail.com",
+    supportPhone: "+918397803333",
 
     // Toggles
     enableCOD: true,
@@ -17,7 +17,7 @@ module.exports = {
     razorpayKeyId: process.env.RAZORPAY_KEY_ID || "rzp_test_placeholder",
 
     // WhatsApp
-    whatsappNumber: "919876543210", // No + or spaces
+    whatsappNumber: "918397803333", // No + or spaces
 
     // Theme Colors (Default Ivory/Gold feel)
     theme: {

@@ -42,6 +42,10 @@ const API = {
     delete(endpoint) { return this.request(endpoint, 'DELETE'); }
 };
 
+// Expose to window for other scripts
+window.API = API;
+window.State = State;
+
 // Core Logic
 const App = {
     async init() {
@@ -128,6 +132,26 @@ const App = {
                 `;
             }
         }
+
+        // Update Mobile Sidebar Auth Links
+        const mobileAuthLinks = document.getElementById('mobile-auth-links');
+        if (mobileAuthLinks) {
+            if (State.user) {
+                mobileAuthLinks.innerHTML = `
+                    <div style="padding: 10px 0; border-bottom: 1px solid #eee; margin-bottom: 10px; font-weight: bold;">
+                        Hi, ${State.user.name.split(' ')[0]}
+                    </div>
+                    <a href="account.html" style="display: block; padding: 5px 0;"><i class="fa-regular fa-user"></i> &nbsp; My Account</a>
+                    <a href="wishlist.html" style="display: block; padding: 5px 0;"><i class="fa-solid fa-heart"></i> &nbsp; Wishlist</a>
+                    ${State.user.role === 'admin' ? '<a href="admin.html" style="display: block; padding: 5px 0;"><i class="fa-solid fa-lock"></i> &nbsp; Admin Panel</a>' : ''}
+                    <a href="#" onclick="App.logout()" style="display: block; padding: 5px 0;"><i class="fa-solid fa-arrow-right-from-bracket"></i> &nbsp; Logout</a>
+                `;
+            } else {
+                mobileAuthLinks.innerHTML = `
+                    <a href="account.html" style="display: block; padding: 10px 0;">Login / Register</a>
+                `;
+            }
+        }
     },
 
     async refreshCart() {
@@ -143,6 +167,9 @@ const App = {
         }
     }
 };
+
+window.App = App; // Expose App to window
+
 
 // Utils
 function formatPrice(price) {

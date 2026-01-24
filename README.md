@@ -1,4 +1,4 @@
-# The Jewel Room - Ecommerce Template
+# Shree Roop Creative - Ecommerce Template
 
 A complete, production-ready ecommerce website template for an Artificial Jewelry Store. Built with Node.js, Express, PostgreSQL, and Vanilla JS.
 
