@@ -854,11 +854,7 @@ footer {
         gap: 15px !important;
     }
 
-    #product-list {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 15px !important;
-    }
-
+    #product-list,
     #wishlist-container {
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 15px !important;
