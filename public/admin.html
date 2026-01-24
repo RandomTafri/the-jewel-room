@@ -186,18 +186,26 @@
     <div id="category-modal" class="modal-overlay hidden">
         <div class="modal">
             <div class="flex justify-between items-center mb-20">
-                <h3 style="margin: 0;">Add Category</h3>
+                <h3 id="cat-modal-title" style="margin: 0;">Add Category</h3>
                 <button onclick="closeModal('category-modal')"
                     style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">&times;</button>
             </div>
             <form onsubmit="saveCategory(event)" style="display: grid; gap: 15px;">
+                <input type="hidden" id="cat-id">
                 <input type="text" id="cat-name" placeholder="Category Name" required>
+                <div id="cat-image-preview" class="hidden" style="text-align: center;">
+                    <img id="cat-preview-img" alt="Current category image"
+                        style="width: 120px; height: 120px; object-fit: cover; border-radius: 6px; box-shadow: var(--shadow-sm);">
+                    <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Current image</p>
+                </div>
                 <div>
                     <label style="font-size: 0.85rem; color: #666; margin-bottom: 5px; display: block;">Cover
                         Image</label>
-                    <input type="file" id="cat-file">
+                    <input type="file" id="cat-file" accept="image/*">
+                    <p style="font-size: 0.8rem; color: #666; margin-top: 6px;">Leave blank to keep the current image.
+                    </p>
                 </div>
-                <button type="submit" class="btn">Create Category</button>
+                <button type="submit" id="cat-submit" class="btn">Create Category</button>
             </form>
         </div>
     </div>
@@ -271,6 +279,9 @@
             // Show selected
             document.getElementById('tab-' + tab).classList.remove('hidden');
             document.getElementById('btn-' + tab).classList.add('active');
+            if (window.matchMedia('(max-width: 768px)').matches) {
+                closeAdminSidebar();
+            }
 
             if (tab === 'orders') loadAdminOrders();
             if (tab === 'products') { loadAdminProducts(); loadCategoryDropdown(); }
@@ -300,9 +311,31 @@
             }
         }
 
-        function showCategoryModal() {
+        function showCategoryModal(category = null) {
             document.getElementById('category-modal').classList.remove('hidden');
-            document.querySelector('#category-modal form').reset();
+            const form = document.querySelector('#category-modal form');
+            form.reset();
+
+            const title = document.getElementById('cat-modal-title');
+            const submit = document.getElementById('cat-submit');
+            const idInput = document.getElementById('cat-id');
+            const preview = document.getElementById('cat-image-preview');
+            const previewImg = document.getElementById('cat-preview-img');
+
+            if (category) {
+                title.innerText = 'Edit Category';
+                submit.innerText = 'Save Category';
+                idInput.value = category.id;
+                document.getElementById('cat-name').value = category.name;
+                previewImg.src = `/api/categories/${category.id}/image`;
+                preview.classList.remove('hidden');
+            } else {
+                title.innerText = 'Add Category';
+                submit.innerText = 'Create Category';
+                idInput.value = '';
+                preview.classList.add('hidden');
+                previewImg.removeAttribute('src');
+            }
         }
 
         function showBrochureModal() {
@@ -434,14 +467,19 @@
             const cats = await API.get('/categories');
             const container = document.getElementById('admin-categories-list');
             container.innerHTML = `
-                <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+                <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
                     ${cats.map(c => `
                         <div style="background: #fff; padding: 15px; border-radius: 6px; box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 15px;">
                              <img src="/api/categories/${c.id}/image" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" onerror="this.style.display='none'">
                              <div style="flex-grow: 1;">
                                  <h4 style="font-size: 1rem; margin: 0;">${c.name}</h4>
                              </div>
-                             <button onclick="deleteCategory(${c.id})" class="btn-danger" style="padding: 5px 10px;"><i class="fa-solid fa-trash"></i></button>
+                             <div class="flex" style="gap: 6px;">
+                                <button onclick='showCategoryModal(${JSON.stringify(c).replace(/'/g, "&apos;")})' class="btn-outline" style="padding: 5px 8px;">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button onclick="deleteCategory(${c.id})" class="btn-danger" style="padding: 5px 8px;"><i class="fa-solid fa-trash"></i></button>
+                             </div>
                         </div>
                     `).join('')}
                 </div>
@@ -457,9 +495,14 @@
 
             try {
                 const token = localStorage.getItem('token');
-                await fetch('/api/categories', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+                const id = document.getElementById('cat-id').value;
+                const endpoint = id ? `/api/categories/${id}` : '/api/categories';
+                const method = id ? 'PUT' : 'POST';
+
+                await fetch(endpoint, { method, headers: { 'Authorization': `Bearer ${token}` }, body: formData });
                 closeModal('category-modal');
                 loadAdminCategories();
+                loadCategoryDropdown();
             } catch (e) { alert('Error'); }
         }
 
@@ -574,6 +617,15 @@
             } else {
                 sidebar.classList.add('open');
                 overlay.classList.remove('hidden');
+            }
+        }
+
+        function closeAdminSidebar() {
+            const sidebar = document.getElementById('admin-sidebar');
+            const overlay = document.getElementById('admin-mobile-overlay');
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.classList.add('hidden');
             }
         }
 
