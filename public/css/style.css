@@ -843,6 +843,11 @@ footer {
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 15px !important;
     }
+
+    #product-list {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 15px !important;
+    }
     
     /* Adjust font sizes for 2-column mobile view if needed */
     .product-card h4 {
