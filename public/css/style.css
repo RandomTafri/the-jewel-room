@@ -126,6 +126,16 @@ button {
     gap: 30px;
 }
 
+.order-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.order-table-scroll table {
+    min-width: 600px;
+}
+
 .hidden {
     display: none !important;
 }
