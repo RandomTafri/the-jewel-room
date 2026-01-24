@@ -126,6 +126,16 @@ button {
     gap: 30px;
 }
 
+.order-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.order-table-scroll table {
+    min-width: 600px;
+}
+
 .hidden {
     display: none !important;
 }
@@ -581,6 +591,10 @@ footer {
     border-bottom: 1px solid rgba(212, 175, 55, 0.2);
 }
 
+.footer-content > * {
+    min-width: 0;
+}
+
 .footer-brand {
     display: flex;
     flex-direction: column;
@@ -836,6 +850,11 @@ footer {
 /* Mobile Specific Overrides */
 @media (max-width: 768px) {
     .product-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 15px !important;
+    }
+
+    #product-list {
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 15px !important;
     }
@@ -1158,7 +1177,10 @@ footer {
         display: flex;
         gap: 15px;
         overflow-x: auto;
+        overflow-y: hidden;
         padding: 10px 0;
+        width: 100%;
+        max-width: 100%;
         scroll-behavior: smooth;
         -webkit-overflow-scrolling: touch;
     }
