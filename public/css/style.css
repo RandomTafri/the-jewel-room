@@ -581,6 +581,10 @@ footer {
     border-bottom: 1px solid rgba(212, 175, 55, 0.2);
 }
 
+.footer-content > * {
+    min-width: 0;
+}
+
 .footer-brand {
     display: flex;
     flex-direction: column;
@@ -1158,7 +1162,10 @@ footer {
         display: flex;
         gap: 15px;
         overflow-x: auto;
+        overflow-y: hidden;
         padding: 10px 0;
+        width: 100%;
+        max-width: 100%;
         scroll-behavior: smooth;
         -webkit-overflow-scrolling: touch;
     }
