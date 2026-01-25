@@ -85,7 +85,7 @@
                     return;
                 }
 
-                let html = '<table style="width: 100%; border-collapse: collapse;"><thead><tr style="border-bottom: 2px solid #eee; text-align: left;"><th style="padding:10px;">Product</th><th>Price</th><th>Quantity</th><th>Total</th><th>Action</th></tr></thead><tbody>';
+                let html = '<div class="cart-table-wrapper"><table class="cart-table"><thead><tr style="border-bottom: 2px solid #eee; text-align: left;"><th style="padding:10px;">Product</th><th>Price</th><th>Quantity</th><th>Total</th><th>Action</th></tr></thead><tbody>';
 
                 items.forEach(item => {
                     const itemTotal = item.price * item.quantity;
@@ -109,7 +109,7 @@
                     `;
                 });
 
-                html += '</tbody></table>';
+                html += '</tbody></table></div>';
                 container.innerHTML = html;
 
                 document.getElementById('cart-subtotal').innerText = formatPrice(res.subtotal);

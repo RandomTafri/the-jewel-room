@@ -1245,3 +1245,21 @@ footer {
         gap: 15px;
     }
 }
+
+.cart-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.cart-table {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+}
+
+@media (max-width: 768px) {
+    .cart-table {
+        min-width: 520px;
+    }
+}
