@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
+const db = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -52,6 +53,14 @@ app.get('/api/config', (req, res) => {
 // For multi-page, we just serve static files. 
 // If a file isn't found, 404.
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+(async () => {
+    try {
+        await db.pingWithRetry();
+        app.listen(PORT, () => {
+            console.log(`Server running on http://localhost:${PORT}`);
+        });
+    } catch (err) {
+        console.error('Database connection failed during startup:', err && err.code ? err.code : err);
+        process.exit(1);
+    }
+})();
