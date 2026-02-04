@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const { isAdmin } = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const { uploadBufferToR2, isR2Configured } = require('../utils/r2');
 
 // Get all products (with optional filters)
 router.get('/', async (req, res) => {
@@ -13,34 +14,29 @@ router.get('/', async (req, res) => {
 
         if (cat) {
             params.push(`%${cat}%`);
-            query += ` AND category ILIKE $${params.length}`;
+            query += ` AND category LIKE ?`;
         }
 
         if (search) {
             params.push(`%${search}%`);
-            query += ` AND (name ILIKE $${params.length} OR description ILIKE $${params.length})`;
+            query += ` AND (name LIKE ? OR description LIKE ?)`;
+            params.push(`%${search}%`);
         }
 
         if (minPrice) {
             params.push(minPrice);
-            query += ` AND price >= $${params.length}`;
+            query += ` AND price >= ?`;
         }
 
         if (maxPrice) {
             params.push(maxPrice);
-            query += ` AND price <= $${params.length}`;
+            query += ` AND price <= ?`;
         }
 
         query += ' ORDER BY created_at DESC';
 
         const result = await db.query(query, params);
-        // Map results to use DB image endpoint if data exists
-        const products = result.rows.map(p => ({
-            ...p,
-            image_url: p.image_data ? `/api/products/${p.id}/image` : p.image_url
-        }));
-
-        res.json(products);
+        res.json(result.rows);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Server error' });
@@ -51,15 +47,13 @@ router.get('/', async (req, res) => {
 router.get('/:id/image', async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await db.query('SELECT image_data, mime_type FROM products WHERE id = $1', [id]);
+        const result = await db.query('SELECT image_url FROM products WHERE id = ?', [id]);
 
-        if (result.rows.length === 0 || !result.rows[0].image_data) {
+        if (result.rows.length === 0 || !result.rows[0].image_url) {
             return res.status(404).send('Not Found');
         }
 
-        const img = result.rows[0];
-        res.setHeader('Content-Type', img.mime_type || 'image/jpeg');
-        res.send(img.image_data);
+        res.redirect(result.rows[0].image_url);
     } catch (err) {
         res.status(500).send('Error');
     }
@@ -69,13 +63,9 @@ router.get('/:id/image', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await db.query('SELECT * FROM products WHERE id = $1', [id]);
+        const result = await db.query('SELECT * FROM products WHERE id = ?', [id]);
         if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
-
-        const p = result.rows[0];
-        if (p.image_data) p.image_url = `/api/products/${p.id}/image`;
-
-        res.json(p);
+        res.json(result.rows[0]);
     } catch (err) {
         res.status(500).json({ error: 'Server error' });
     }
@@ -85,20 +75,28 @@ router.get('/:id', async (req, res) => {
 router.post('/', isAdmin, upload.single('image'), async (req, res) => {
     const { name, description, price, category, stock, image_url: manualUrl } = req.body;
 
-    let image_data = null;
-    let mime_type = null;
     let image_url = manualUrl || '';
 
     if (req.file) {
-        image_data = req.file.buffer;
-        mime_type = req.file.mimetype;
+        if (!isR2Configured()) {
+            return res.status(503).json({ error: 'R2 not configured' });
+        }
+        const upload = await uploadBufferToR2({
+            buffer: req.file.buffer,
+            contentType: req.file.mimetype,
+            keyPrefix: 'products',
+            originalName: req.file.originalname
+        });
+        image_url = upload.publicUrl;
     }
 
     try {
-        const result = await db.query(
-            'INSERT INTO products (name, description, price, category, image_url, image_data, mime_type, stock) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-            [name, description, price, category, image_url, image_data, mime_type, stock]
+        const insert = await db.query(
+            'INSERT INTO products (name, description, price, category, image_url, stock) VALUES (?, ?, ?, ?, ?, ?)',
+            [name, description, price, category, image_url, stock]
         );
+        const insertedId = insert.rows.insertId;
+        const result = await db.query('SELECT * FROM products WHERE id = ?', [insertedId]);
         res.status(201).json(result.rows[0]);
     } catch (err) {
         console.error(err);
@@ -111,29 +109,34 @@ router.put('/:id', isAdmin, upload.single('image'), async (req, res) => {
     const { id } = req.params;
     const { name, description, price, category, image_url, stock, is_active } = req.body;
 
-    let image_data = null;
-    let mime_type = null;
-
+    let nextImageUrl = image_url;
     if (req.file) {
-        image_data = req.file.buffer;
-        mime_type = req.file.mimetype;
+        if (!isR2Configured()) {
+            return res.status(503).json({ error: 'R2 not configured' });
+        }
+        const upload = await uploadBufferToR2({
+            buffer: req.file.buffer,
+            contentType: req.file.mimetype,
+            keyPrefix: 'products',
+            originalName: req.file.originalname
+        });
+        nextImageUrl = upload.publicUrl;
     }
 
     try {
-        const result = await db.query(
+        await db.query(
             `UPDATE products SET 
-                name = COALESCE($1, name), 
-                description = COALESCE($2, description), 
-                price = COALESCE($3, price), 
-                category = COALESCE($4, category), 
-                image_url = COALESCE($5, image_url), 
-                stock = COALESCE($6, stock),
-                is_active = COALESCE($7, is_active),
-                image_data = COALESCE($8, image_data),
-                mime_type = COALESCE($9, mime_type)
-             WHERE id = $10 RETURNING *`,
-            [name, description, price, category, image_url, stock, is_active, image_data, mime_type, id]
+                name = COALESCE(?, name), 
+                description = COALESCE(?, description), 
+                price = COALESCE(?, price), 
+                category = COALESCE(?, category), 
+                image_url = COALESCE(?, image_url), 
+                stock = COALESCE(?, stock),
+                is_active = COALESCE(?, is_active)
+             WHERE id = ?`,
+            [name, description, price, category, nextImageUrl, stock, is_active, id]
         );
+        const result = await db.query('SELECT * FROM products WHERE id = ?', [id]);
         if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
         res.json(result.rows[0]);
     } catch (err) {
@@ -146,7 +149,8 @@ router.put('/:id', isAdmin, upload.single('image'), async (req, res) => {
 router.delete('/:id', isAdmin, async (req, res) => {
     const { id } = req.params;
     try {
-        const result = await db.query('UPDATE products SET is_active = false WHERE id = $1 RETURNING *', [id]);
+        await db.query('UPDATE products SET is_active = false WHERE id = ?', [id]);
+        const result = await db.query('SELECT * FROM products WHERE id = ?', [id]);
         if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
         res.json({ message: 'Product deleted (soft)' });
     } catch (err) {

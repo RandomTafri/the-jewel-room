@@ -8,10 +8,10 @@ const { calculateDiscount } = require('../utils/discounts');
 async function getOrCreateCart(userId, sessionId) {
     let query, params;
     if (userId) {
-        query = 'SELECT * FROM carts WHERE user_id = $1';
+        query = 'SELECT * FROM carts WHERE user_id = ?';
         params = [userId];
     } else {
-        query = 'SELECT * FROM carts WHERE session_id = $1';
+        query = 'SELECT * FROM carts WHERE session_id = ?';
         params = [sessionId];
     }
 
@@ -20,11 +20,12 @@ async function getOrCreateCart(userId, sessionId) {
 
     // Create
     if (userId) {
-        result = await db.query('INSERT INTO carts (user_id) VALUES ($1) RETURNING *', [userId]);
+        result = await db.query('INSERT INTO carts (user_id) VALUES (?)', [userId]);
     } else {
-        result = await db.query('INSERT INTO carts (session_id) VALUES ($1) RETURNING *', [sessionId]);
+        result = await db.query('INSERT INTO carts (session_id) VALUES (?)', [sessionId]);
     }
-    return result.rows[0];
+    const inserted = await db.query('SELECT * FROM carts WHERE id = ?', [result.rows.insertId]);
+    return inserted.rows[0];
 }
 
 // Get Cart items
@@ -41,7 +42,7 @@ router.get('/', async (req, res) => {
             `SELECT ci.id, ci.quantity, p.id as product_id, p.name, p.price, p.image_url 
              FROM cart_items ci 
              JOIN products p ON ci.product_id = p.id 
-             WHERE ci.cart_id = $1`,
+             WHERE ci.cart_id = ?`,
             [cart.id]
         );
 
@@ -78,14 +79,14 @@ router.post('/', async (req, res) => {
         const qtyToAdd = parseInt(quantity) || 1;
 
         // Check Product Stock
-        const productRes = await db.query('SELECT stock FROM products WHERE id = $1', [productId]);
+        const productRes = await db.query('SELECT stock FROM products WHERE id = ?', [productId]);
         if (productRes.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
 
         const availableStock = productRes.rows[0].stock;
 
         // Check if item exists
         const existing = await db.query(
-            'SELECT * FROM cart_items WHERE cart_id = $1 AND product_id = $2',
+            'SELECT * FROM cart_items WHERE cart_id = ? AND product_id = ?',
             [cart.id, productId]
         );
 
@@ -102,13 +103,13 @@ router.post('/', async (req, res) => {
             // Update quantity
             const newQty = existing.rows[0].quantity + qtyToAdd;
             await db.query(
-                'UPDATE cart_items SET quantity = $1 WHERE id = $2',
+                'UPDATE cart_items SET quantity = ? WHERE id = ?',
                 [newQty, existing.rows[0].id]
             );
         } else {
             // Insert
             await db.query(
-                'INSERT INTO cart_items (cart_id, product_id, quantity) VALUES ($1, $2, $3)',
+                'INSERT INTO cart_items (cart_id, product_id, quantity) VALUES (?, ?, ?)',
                 [cart.id, productId, qtyToAdd]
             );
         }
@@ -125,9 +126,9 @@ router.put('/update/:itemId', async (req, res) => {
     const { itemId } = req.params;
     try {
         if (quantity <= 0) {
-            await db.query('DELETE FROM cart_items WHERE id = $1', [itemId]);
+            await db.query('DELETE FROM cart_items WHERE id = ?', [itemId]);
         } else {
-            await db.query('UPDATE cart_items SET quantity = $1 WHERE id = $2', [quantity, itemId]);
+            await db.query('UPDATE cart_items SET quantity = ? WHERE id = ?', [quantity, itemId]);
         }
         res.json({ message: 'Updated' });
     } catch (err) {
@@ -143,27 +144,27 @@ router.post('/merge', authenticateToken, async (req, res) => {
     if (!sessionId) return res.status(400).json({ error: 'No session ID' });
 
     try {
-        const guestCart = await db.query('SELECT * FROM carts WHERE session_id = $1', [sessionId]);
+        const guestCart = await db.query('SELECT * FROM carts WHERE session_id = ?', [sessionId]);
         if (guestCart.rows.length === 0) return res.json({ message: 'No guest cart' });
 
         const guestCartId = guestCart.rows[0].id;
         const userCart = await getOrCreateCart(userId, null);
 
-        const guestItems = await db.query('SELECT * FROM cart_items WHERE cart_id = $1', [guestCartId]);
+        const guestItems = await db.query('SELECT * FROM cart_items WHERE cart_id = ?', [guestCartId]);
 
         for (let item of guestItems.rows) {
             const userItem = await db.query(
-                'SELECT * FROM cart_items WHERE cart_id = $1 AND product_id = $2',
+                'SELECT * FROM cart_items WHERE cart_id = ? AND product_id = ?',
                 [userCart.id, item.product_id]
             );
             if (userItem.rows.length > 0) {
-                await db.query('UPDATE cart_items SET quantity = quantity + $1 WHERE id = $2', [item.quantity, userItem.rows[0].id]);
+                await db.query('UPDATE cart_items SET quantity = quantity + ? WHERE id = ?', [item.quantity, userItem.rows[0].id]);
             } else {
-                await db.query('INSERT INTO cart_items (cart_id, product_id, quantity) VALUES ($1, $2, $3)', [userCart.id, item.product_id, item.quantity]);
+                await db.query('INSERT INTO cart_items (cart_id, product_id, quantity) VALUES (?, ?, ?)', [userCart.id, item.product_id, item.quantity]);
             }
         }
 
-        await db.query('DELETE FROM carts WHERE id = $1', [guestCartId]);
+        await db.query('DELETE FROM carts WHERE id = ?', [guestCartId]);
         res.json({ message: 'Merged' });
     } catch (err) {
         console.error(err);

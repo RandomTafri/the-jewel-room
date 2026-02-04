@@ -1,30 +1,40 @@
-const { Pool } = require('pg');
+const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
-});
+function buildPoolConfig() {
+    if (process.env.MYSQL_URL) {
+        return process.env.MYSQL_URL;
+    }
 
-const schema = `
-ALTER TABLE brochures 
-ADD COLUMN IF NOT EXISTS link TEXT,
-ADD COLUMN IF NOT EXISTS thumbnail_data BYTEA,
-ADD COLUMN IF NOT EXISTS thumbnail_mime_type VARCHAR(50),
-ALTER COLUMN file_data DROP NOT NULL,
-ALTER COLUMN mime_type DROP NOT NULL;
-`;
+    return {
+        host: process.env.MYSQL_HOST || 'localhost',
+        port: process.env.MYSQL_PORT ? Number(process.env.MYSQL_PORT) : 3306,
+        user: process.env.MYSQL_USER || 'root',
+        password: process.env.MYSQL_PASSWORD || '',
+        database: process.env.MYSQL_DATABASE || 'the_jewel_room'
+    };
+}
 
 async function migrate() {
-    const client = await pool.connect();
+    const pool = mysql.createPool(buildPoolConfig());
     try {
         console.log('Migrating brochures table...');
-        await client.query(schema);
+        const [columns] = await pool.execute(
+            `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'brochures'`
+        );
+        const existing = new Set(columns.map((c) => c.COLUMN_NAME));
+
+        if (!existing.has('link')) {
+            await pool.execute('ALTER TABLE brochures ADD COLUMN link TEXT');
+        }
+        if (!existing.has('thumbnail_url')) {
+            await pool.execute('ALTER TABLE brochures ADD COLUMN thumbnail_url TEXT');
+        }
         console.log('Brochures table migrated successfully.');
     } catch (err) {
         console.error('Error migrating brochures table:', err);
     } finally {
-        client.release();
         await pool.end();
     }
 }

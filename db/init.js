@@ -1,143 +1,158 @@
-const { Pool } = require('pg');
+const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-const connectionString = process.env.DATABASE_URL;
+function buildPoolConfig() {
+    if (process.env.MYSQL_URL) {
+        return process.env.MYSQL_URL;
+    }
 
-if (!connectionString) {
-    console.error('DATABASE_URL is not defined in .env');
-    process.exit(1);
+    return {
+        host: process.env.MYSQL_HOST || 'localhost',
+        port: process.env.MYSQL_PORT ? Number(process.env.MYSQL_PORT) : 3306,
+        user: process.env.MYSQL_USER || 'root',
+        password: process.env.MYSQL_PASSWORD || '',
+        database: process.env.MYSQL_DATABASE || 'the_jewel_room'
+    };
 }
 
-const pool = new Pool({
-    connectionString,
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
-});
+const schemaStatements = [
+    `CREATE TABLE IF NOT EXISTS brochures (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        link TEXT,
+        thumbnail_url TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB`,
 
-const schema = `
+    `CREATE TABLE IF NOT EXISTS categories (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) UNIQUE NOT NULL,
+        image_url TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB`,
 
-CREATE TABLE IF NOT EXISTS brochures (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    link TEXT,
-    thumbnail_data BYTEA,
-    thumbnail_mime_type VARCHAR(50),
-    file_data BYTEA,
-    mime_type VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    `CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        role VARCHAR(50) DEFAULT 'customer',
+        phone VARCHAR(20),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB`,
 
-CREATE TABLE IF NOT EXISTS categories (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL,
-    image_data BYTEA,
-    mime_type VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    `CREATE TABLE IF NOT EXISTS products (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        price DECIMAL(10, 2) NOT NULL,
+        category VARCHAR(100),
+        image_url TEXT,
+        stock INT DEFAULT 0,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB`,
 
-CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(50) DEFAULT 'customer',
-    phone VARCHAR(20),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    `CREATE TABLE IF NOT EXISTS carts (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT,
+        session_id VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_cart (user_id, session_id),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB`,
 
-CREATE TABLE IF NOT EXISTS products (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    price DECIMAL(10, 2) NOT NULL,
-    category VARCHAR(100),
-    image_url TEXT,
-    image_data BYTEA,
-    mime_type VARCHAR(50),
-    stock INTEGER DEFAULT 0,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    `CREATE TABLE IF NOT EXISTS cart_items (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        cart_id INT,
+        product_id INT,
+        quantity INT DEFAULT 1,
+        UNIQUE KEY unique_cart_product (cart_id, product_id),
+        FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products(id)
+    ) ENGINE=InnoDB`,
 
-CREATE TABLE IF NOT EXISTS cart_items (
-    id SERIAL PRIMARY KEY,
-    cart_id INTEGER, -- constraint added later or lazily for demo
-    product_id INTEGER REFERENCES products(id),
-    quantity INTEGER DEFAULT 1,
-    UNIQUE(cart_id, product_id)
-);
--- Note: carts table definition was below, logic slightly mixed in original file, standardizing:
-CREATE TABLE IF NOT EXISTS carts (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    session_id VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, session_id)
-);
--- Fix foreign key for cart_items if table order matters (Postgres resolves deferred or we create after)
-ALTER TABLE cart_items DROP CONSTRAINT IF EXISTS cart_items_cart_id_fkey;
-ALTER TABLE cart_items ADD CONSTRAINT cart_items_cart_id_fkey FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE CASCADE;
+    `CREATE TABLE IF NOT EXISTS orders (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT,
+        customer_name VARCHAR(255),
+        customer_email VARCHAR(255),
+        customer_phone VARCHAR(50),
+        shipping_address TEXT NOT NULL,
+        total_amount DECIMAL(10, 2) NOT NULL,
+        payment_method VARCHAR(50),
+        payment_status VARCHAR(50) DEFAULT 'PENDING',
+        order_status VARCHAR(50) DEFAULT 'PLACED',
+        razorpay_order_id VARCHAR(255),
+        razorpay_payment_id VARCHAR(255),
+        items_snapshot JSON,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    ) ENGINE=InnoDB`,
 
+    `CREATE TABLE IF NOT EXISTS discounts (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        code VARCHAR(50) UNIQUE NOT NULL,
+        type VARCHAR(20) NOT NULL,
+        value DECIMAL(10, 2) NOT NULL,
+        min_order_value DECIMAL(10, 2) DEFAULT 0,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB`,
 
-CREATE TABLE IF NOT EXISTS orders (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    customer_name VARCHAR(255),
-    customer_email VARCHAR(255),
-    customer_phone VARCHAR(50),
-    shipping_address TEXT NOT NULL,
-    total_amount DECIMAL(10, 2) NOT NULL,
-    payment_method VARCHAR(50),
-    payment_status VARCHAR(50) DEFAULT 'PENDING',
-    order_status VARCHAR(50) DEFAULT 'PLACED',
-    razorpay_order_id VARCHAR(255),
-    razorpay_payment_id VARCHAR(255),
-    items_snapshot JSONB,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    `CREATE TABLE IF NOT EXISTS wishlist (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT,
+        session_id VARCHAR(255),
+        product_id INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB`,
 
-CREATE TABLE IF NOT EXISTS discounts (
-    id SERIAL PRIMARY KEY,
-    code VARCHAR(50) UNIQUE NOT NULL,
-    type VARCHAR(20) NOT NULL,
-    value DECIMAL(10, 2) NOT NULL,
-    min_order_value DECIMAL(10, 2) DEFAULT 0,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    `CREATE INDEX idx_wishlist_user ON wishlist(user_id)`,
+    `CREATE INDEX idx_wishlist_session ON wishlist(session_id)`,
 
-CREATE TABLE IF NOT EXISTS wishlist (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    session_id VARCHAR(255),
-    product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-CREATE INDEX IF NOT EXISTS idx_wishlist_user ON wishlist(user_id);
-CREATE INDEX IF NOT EXISTS idx_wishlist_session ON wishlist(session_id);
-`;
+    `CREATE TABLE IF NOT EXISTS footer_links (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        url TEXT NOT NULL,
+        display_order INT DEFAULT 0,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB`,
+
+    `CREATE TABLE IF NOT EXISTS info_pages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) UNIQUE NOT NULL,
+        content MEDIUMTEXT,
+        display_order INT DEFAULT 0,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB`
+];
 
 async function initDB() {
-    const client = await pool.connect();
+    const pool = mysql.createPool(buildPoolConfig());
     try {
         console.log('Initializing database schema...');
-        await client.query(schema);
-        console.log('Database schema initialized successfully.');
-
-        // Check for admin user
-        const adminCheck = await client.query("SELECT * FROM users WHERE email = 'admin@example.com'");
-        if (adminCheck.rows.length === 0) {
-            // Create default admin: admin@example.com / admin123
-            // Hash for 'admin123' (using a common bcrypt hash for simplicity in init, but in real app we use bcrypt)
-            // $2b$10$X7.G.w.w.w.w.w.w.w.w.w.w.w.w.w.w.w.w.w.w.w.w.w.w.w.w.w
-            // Actually, we should import bcrypt to do this properly if we want 'admin123' to work. 
-            // For now, let's skip auto-creating admin here to keep dependencies simple in this script, or assume setup script runs via node
+        for (const statement of schemaStatements) {
+            try {
+                await pool.execute(statement);
+            } catch (err) {
+                if (err && err.code === 'ER_DUP_KEYNAME') {
+                    continue;
+                }
+                throw err;
+            }
         }
-
+        console.log('Database schema initialized successfully.');
     } catch (err) {
         console.error('Error initializing database:', err);
     } finally {
-        client.release();
         await pool.end();
     }
 }

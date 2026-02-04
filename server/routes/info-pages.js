@@ -20,7 +20,7 @@ router.get('/', async (req, res) => {
 router.get('/:slug', async (req, res) => {
     try {
         const result = await db.query(
-            'SELECT * FROM info_pages WHERE slug = $1',
+            'SELECT * FROM info_pages WHERE slug = ?',
             [req.params.slug]
         );
         if (result.rows.length === 0) {
@@ -38,7 +38,7 @@ router.put('/:id', isAdmin, async (req, res) => {
     const { title, content } = req.body;
     try {
         await db.query(
-            'UPDATE info_pages SET title = $1, content = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
+            'UPDATE info_pages SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
             [title, content, req.params.id]
         );
         res.json({ message: 'Page updated successfully' });

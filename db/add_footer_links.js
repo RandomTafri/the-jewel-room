@@ -1,41 +1,46 @@
-const { Pool } = require('pg');
+const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
-});
+function buildPoolConfig() {
+    if (process.env.MYSQL_URL) {
+        return process.env.MYSQL_URL;
+    }
 
-const schema = `
-CREATE TABLE IF NOT EXISTS footer_links (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    url TEXT NOT NULL,
-    display_order INTEGER DEFAULT 0,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Insert default footer links
-INSERT INTO footer_links (title, url, display_order) VALUES
-('About Us', '/about.html', 1),
-('Privacy Policy', '/privacy.html', 2),
-('Shipping & Returns', '/shipping.html', 3),
-('Contact', '/contact.html', 4),
-('FAQ', '/faq.html', 5)
-ON CONFLICT DO NOTHING;
-`;
+    return {
+        host: process.env.MYSQL_HOST || 'localhost',
+        port: process.env.MYSQL_PORT ? Number(process.env.MYSQL_PORT) : 3306,
+        user: process.env.MYSQL_USER || 'root',
+        password: process.env.MYSQL_PASSWORD || '',
+        database: process.env.MYSQL_DATABASE || 'the_jewel_room'
+    };
+}
 
 async function addFooterLinks() {
-    const client = await pool.connect();
+    const pool = mysql.createPool(buildPoolConfig());
     try {
         console.log('Creating footer_links table...');
-        await client.query(schema);
+        await pool.execute(`
+            CREATE TABLE IF NOT EXISTS footer_links (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                url TEXT NOT NULL,
+                display_order INT DEFAULT 0,
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB
+        `);
+        await pool.execute(`
+            INSERT INTO footer_links (title, url, display_order) VALUES
+            ('About Us', '/about.html', 1),
+            ('Privacy Policy', '/privacy.html', 2),
+            ('Shipping & Returns', '/shipping.html', 3),
+            ('Contact', '/contact.html', 4),
+            ('FAQ', '/faq.html', 5)
+        `);
         console.log('Footer links table created successfully.');
     } catch (err) {
         console.error('Error creating footer_links table:', err);
     } finally {
-        client.release();
         await pool.end();
     }
 }

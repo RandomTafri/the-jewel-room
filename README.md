@@ -1,11 +1,11 @@
 # Shree Roop Creative - Ecommerce Template
 
-A complete, production-ready ecommerce website template for an Artificial Jewelry Store. Built with Node.js, Express, PostgreSQL, and Vanilla JS.
+A complete, production-ready ecommerce website template for an Artificial Jewelry Store. Built with Node.js, Express, MySQL, Cloudflare R2, and Vanilla JS.
 
 ## Features
 
 - **Full Stack**: Express API + Vanilla Frontend.
-- **Database**: PostgreSQL with SSL support.
+- **Database**: MySQL (local or managed).
 - **Auth**: Customer & Admin (JWT based).
 - **Shopping**: Categories, Search, persistent Cart, Discounts.
 - **Payments**: Razorpay (Checkout + optional Link generation) + COD.
@@ -15,7 +15,8 @@ A complete, production-ready ecommerce website template for an Artificial Jewelr
 ## Prerequisites
 
 - Node.js (v18+)
-- PostgreSQL Database (Local or Managed like Neon, Supabase, Railway)
+- MySQL Database (Local or Managed)
+- Cloudflare R2 bucket (for image storage)
 
 ## Quick Start (Local)
 
@@ -27,14 +28,24 @@ A complete, production-ready ecommerce website template for an Artificial Jewelr
     ```
 
 2.  **Environment Setup**
-    Copy `.env.example` to `.env` and update values:
+    Copy `.env.example` to `.env` and update values.  
+    For local-only overrides, use `.env.local` (gitignored) and put secrets there:
     ```env
     PORT=3000
-    DATABASE_URL=postgres://user:password@localhost:5432/jewelroom
-    DB_SSL=false
+    MYSQL_URL=mysql://user:password@localhost:3306/the_jewel_room
+    MYSQL_HOST=localhost
+    MYSQL_PORT=3306
+    MYSQL_USER=root
+    MYSQL_PASSWORD=yourpassword
+    MYSQL_DATABASE=the_jewel_room
     JWT_SECRET=mysecret
     RAZORPAY_KEY_ID=rzp_test_xyz...
     RAZORPAY_KEY_SECRET=...
+    R2_ENDPOINT=https://<accountid>.r2.cloudflarestorage.com
+    R2_ACCESS_KEY_ID=...
+    R2_SECRET_ACCESS_KEY=...
+    R2_BUCKET=...
+    R2_PUBLIC_BASE_URL=https://<public-domain-or-r2.dev>/<bucket>
     ```
 
 3.  **Database Init**
@@ -49,11 +60,11 @@ A complete, production-ready ecommerce website template for an Artificial Jewelr
     ```
     Open `http://localhost:3000`
 
-## Deployment (Render/Railway/Heroku)
+## Deployment (Hostinger / any Node host)
 
 1.  **Create Service**: Connect this repo to your cloud provider.
-2.  **Environment Variables**: storage your `.env` vars in the provider's dashboard.
-    - Set `DB_SSL=true` if using a managed cloud DB.
+2.  **Environment Variables**: store your `.env` vars in the provider's dashboard.
+    - Set MySQL credentials + R2 credentials in the host dashboard.
 3.  **Build Command**: `npm install`
 4.  **Start Command**: `npm start`
 5.  **Database**:

@@ -1,24 +1,34 @@
-const { Pool } = require('pg');
+const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
-});
+function buildPoolConfig() {
+    if (process.env.MYSQL_URL) {
+        return process.env.MYSQL_URL;
+    }
+
+    return {
+        host: process.env.MYSQL_HOST || 'localhost',
+        port: process.env.MYSQL_PORT ? Number(process.env.MYSQL_PORT) : 3306,
+        user: process.env.MYSQL_USER || 'root',
+        password: process.env.MYSQL_PASSWORD || '',
+        database: process.env.MYSQL_DATABASE || 'the_jewel_room'
+    };
+}
 
 async function seed() {
-    const client = await pool.connect();
+    const pool = mysql.createPool(buildPoolConfig());
     try {
         console.log('Seeding...');
 
         // 1. Create Admin
         const hashedPassword = await bcrypt.hash('admin123', 10);
-        await client.query(`
-            INSERT INTO users (name, email, password_hash, role, phone) 
-            VALUES ('Admin User', 'admin@thejewelroom.com', $1, 'admin', '9999999999')
-            ON CONFLICT (email) DO NOTHING
-        `, [hashedPassword]);
+        await pool.execute(
+            `INSERT INTO users (name, email, password_hash, role, phone) 
+             VALUES ('Admin User', 'admin@thejewelroom.com', ?, 'admin', '9999999999')
+             ON DUPLICATE KEY UPDATE email = email`,
+            [hashedPassword]
+        );
 
         // 2. Products
         const products = [
@@ -57,25 +67,25 @@ async function seed() {
         ];
 
         for (const p of products) {
-            await client.query(`
-                INSERT INTO products (name, description, price, category, image_url, stock)
-                VALUES ($1, $2, $3, $4, $5, $6)
-            `, [p.name, p.description, p.price, p.category, p.image_url, p.stock]);
+            await pool.execute(
+                `INSERT INTO products (name, description, price, category, image_url, stock)
+                 VALUES (?, ?, ?, ?, ?, ?)`,
+                [p.name, p.description, p.price, p.category, p.image_url, p.stock]
+            );
         }
 
         // 3. Discounts
-        await client.query(`
-            INSERT INTO discounts (code, type, value, min_order_value, is_active)
-            VALUES ('WELCOME10', 'PERCENTAGE', 10, 500, true)
-            ON CONFLICT (code) DO NOTHING
-        `);
+        await pool.execute(
+            `INSERT INTO discounts (code, type, value, min_order_value, is_active)
+             VALUES ('WELCOME10', 'PERCENTAGE', 10, 500, true)
+             ON DUPLICATE KEY UPDATE code = code`
+        );
 
         console.log('Seeding Complete.');
     } catch (err) {
         console.error('Seeding error', err);
     } finally {
-        client.release();
-        pool.end();
+        await pool.end();
     }
 }
 

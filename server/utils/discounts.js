@@ -22,7 +22,7 @@ async function calculateDiscount(cartItems, couponCode, subtotal) {
     if (!couponCode) return { discountAmount: 0, finalTotal: subtotal, message: '' };
 
     try {
-        const res = await db.query('SELECT * FROM discounts WHERE code = $1 AND is_active = true', [couponCode]);
+        const res = await db.query('SELECT * FROM discounts WHERE code = ? AND is_active = true', [couponCode]);
         if (res.rows.length === 0) {
             return { discountAmount: 0, finalTotal: subtotal, message: 'Invalid Coupon' };
         }

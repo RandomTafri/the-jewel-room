@@ -10,13 +10,14 @@
     "db:seed": "node db/seed.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.632.0",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
-    "pg": "^8.11.5",
+    "mysql2": "^3.11.5",
     "razorpay": "^2.9.2"
   },
   "devDependencies": {
