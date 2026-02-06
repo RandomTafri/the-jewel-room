@@ -21,6 +21,18 @@ function buildPoolConfig() {
     };
 }
 
+function getDbDebugInfo() {
+    // Never log secrets. This is safe to print in shared-host logs.
+    return {
+        usingUrl: Boolean(process.env.MYSQL_URL),
+        host: process.env.MYSQL_HOST || 'localhost',
+        port: process.env.MYSQL_PORT ? Number(process.env.MYSQL_PORT) : 3306,
+        user: process.env.MYSQL_USER || 'root',
+        database: process.env.MYSQL_DATABASE || 'the_jewel_room',
+        hasPassword: Boolean(process.env.MYSQL_PASSWORD && process.env.MYSQL_PASSWORD.length > 0)
+    };
+}
+
 const pool = mysql.createPool(buildPoolConfig());
 
 function isTransientDbError(err) {
@@ -73,5 +85,6 @@ module.exports = {
         return { rows };
     },
     pingWithRetry,
+    getDbDebugInfo,
     pool
 };

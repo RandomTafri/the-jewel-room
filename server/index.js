@@ -60,7 +60,15 @@ app.get('/api/config', (req, res) => {
             console.log(`Server running on http://localhost:${PORT}`);
         });
     } catch (err) {
-        console.error('Database connection failed during startup:', err && err.code ? err.code : err);
+        // Print useful, non-secret diagnostics for shared hosts (Hostinger, etc.)
+        const debugInfo = typeof db.getDbDebugInfo === 'function' ? db.getDbDebugInfo() : {};
+        console.error('Database connection failed during startup:', {
+            code: err && err.code,
+            errno: err && err.errno,
+            sqlState: err && err.sqlState,
+            message: err && (err.sqlMessage || err.message),
+            db: debugInfo
+        });
         process.exit(1);
     }
 })();
