@@ -172,29 +172,45 @@
     <section class="section" style="background-color: var(--secondary-color);">
         <div class="container text-center">
             <h3>Customer Reviews</h3>
-            <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin-top: 40px;">
-                <div style="background: white; padding: 20px; border-radius: 5px;">
-                    <p style="font-style: italic;">"Absolutely stunning designs! I wore the Kundan set for a wedding and
-                        got so many compliments."</p>
-                    <h5 style="margin-top: 15px;">- Priya S.</h5>
-                </div>
-                <div style="background: white; padding: 20px; border-radius: 5px;">
-                    <p style="font-style: italic;">"Great quality and fast delivery. The packing was also very secure.
-                        Will order again!"</p>
-                    <h5 style="margin-top: 15px;">- Anjali M.</h5>
-                </div>
-                <div style="background: white; padding: 20px; border-radius: 5px;">
-                    <p style="font-style: italic;">"Loved the earrings. They look just like real gold. Highly
-                        recommended."</p>
-                    <h5 style="margin-top: 15px;">- Sneha R.</h5>
-                </div>
+            <div id="home-reviews-list" class="grid"
+                style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin-top: 40px;">
+                <p class="text-center">Loading reviews...</p>
             </div>
             <div style="margin-top: 30px;">
-                <a href="https://maps.google.com" target="_blank" class="btn-outline"
-                    style="border-color: #333; color: #333;">Read More on Google</a>
+                <button class="btn-outline" style="border-color: #333; color: #333;" onclick="openReviewModal()">
+                    Review Our Website
+                </button>
             </div>
         </div>
     </section>
+
+    <!-- Review Modal -->
+    <div id="review-modal" class="modal-overlay hidden" onclick="closeReviewModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-20">
+                <h3 style="margin: 0;">Write a Review</h3>
+                <button onclick="closeReviewModal()"
+                    style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <form onsubmit="submitReview(event)" style="display: grid; gap: 12px;">
+                <input type="text" id="review-author" placeholder="Your Name" required maxlength="255">
+                <select id="review-rating">
+                    <option value="">Rating (optional)</option>
+                    <option value="5">5 - Excellent</option>
+                    <option value="4">4 - Good</option>
+                    <option value="3">3 - Okay</option>
+                    <option value="2">2 - Not great</option>
+                    <option value="1">1 - Bad</option>
+                </select>
+                <textarea id="review-content" placeholder="Write your review..." rows="4" required
+                    maxlength="2000"></textarea>
+                <p style="font-size: 0.85rem; color: #666; margin: 0;">
+                    Reviews are shown after admin approval.
+                </p>
+                <button type="submit" class="btn">Submit Review</button>
+            </form>
+        </div>
+    </div>
 
     <footer id="site-footer"></footer>
 
@@ -276,10 +292,82 @@
             window.open(url, '_blank');
         }
 
+        function renderReviewCard(container, review) {
+            const card = document.createElement('div');
+            card.style.background = 'white';
+            card.style.padding = '20px';
+            card.style.borderRadius = '5px';
+
+            const contentEl = document.createElement('p');
+            contentEl.style.fontStyle = 'italic';
+            contentEl.textContent = `"${review.content}"`;
+
+            const nameEl = document.createElement('h5');
+            nameEl.style.marginTop = '15px';
+            nameEl.textContent = `- ${review.author_name}`;
+
+            card.appendChild(contentEl);
+            card.appendChild(nameEl);
+            container.appendChild(card);
+        }
+
+        async function loadFeaturedReviews() {
+            const container = document.getElementById('home-reviews-list');
+            if (!container) return;
+
+            try {
+                const res = await API.get('/reviews/featured');
+                const reviews = (res && res.reviews) || [];
+                container.innerHTML = '';
+
+                if (reviews.length === 0) {
+                    container.innerHTML = '<p class="text-center">No reviews yet. Be the first to leave one!</p>';
+                    return;
+                }
+
+                reviews.slice(0, 3).forEach(r => renderReviewCard(container, r));
+            } catch (e) {
+                container.innerHTML = '<p class="text-center">Unable to load reviews.</p>';
+            }
+        }
+
+        function openReviewModal() {
+            const el = document.getElementById('review-modal');
+            if (el) el.classList.remove('hidden');
+        }
+
+        function closeReviewModal() {
+            const el = document.getElementById('review-modal');
+            if (!el) return;
+            el.classList.add('hidden');
+        }
+
+        async function submitReview(e) {
+            e.preventDefault();
+
+            const authorName = document.getElementById('review-author').value;
+            const ratingVal = document.getElementById('review-rating').value;
+            const content = document.getElementById('review-content').value;
+
+            const rating = ratingVal ? Number(ratingVal) : null;
+
+            try {
+                await API.post('/reviews', { authorName, rating, content });
+                closeReviewModal();
+                alert('Thanks! Your review was submitted for approval.');
+                document.getElementById('review-author').value = '';
+                document.getElementById('review-rating').value = '';
+                document.getElementById('review-content').value = '';
+            } catch (err) {
+                alert(err && err.message ? err.message : 'Failed to submit review');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadFeatured();
             loadCollections();
             loadBrochures();
+            loadFeaturedReviews();
             setTimeout(() => {
                 const emailEl = document.getElementById('contact-email');
                 if (emailEl && State.config) {

@@ -114,6 +114,18 @@ const schemaStatements = [
     `CREATE INDEX idx_wishlist_user ON wishlist(user_id)`,
     `CREATE INDEX idx_wishlist_session ON wishlist(session_id)`,
 
+    `CREATE TABLE IF NOT EXISTS reviews (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        author_name VARCHAR(255) NOT NULL,
+        rating TINYINT,
+        content TEXT NOT NULL,
+        source VARCHAR(50) DEFAULT 'website',
+        is_approved BOOLEAN DEFAULT FALSE,
+        is_featured BOOLEAN DEFAULT FALSE,
+        featured_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB`,
+
     `CREATE TABLE IF NOT EXISTS footer_links (
         id INT AUTO_INCREMENT PRIMARY KEY,
         title VARCHAR(255) NOT NULL,

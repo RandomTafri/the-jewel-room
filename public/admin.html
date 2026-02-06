@@ -48,6 +48,8 @@
                     Brochures</button>
                 <button onclick="switchTab('footer')" id="btn-footer"><i class="fa-solid fa-link"></i> &nbsp;
                     Footer Links</button>
+                <button onclick="switchTab('reviews')" id="btn-reviews"><i class="fa-solid fa-star"></i> &nbsp;
+                    Reviews</button>
             </nav>
             <div style="margin-top: auto;">
                 <a href="index.html"
@@ -118,6 +120,26 @@
                 <div id="info-pages-list" style="display: grid; gap: 15px; margin-top: 20px;">
                     <!-- Pages will be loaded here -->
                 </div>
+            </div>
+
+            <!-- Reviews View -->
+            <div id="tab-reviews" class="tab-content hidden">
+                <div class="admin-header">
+                    <div>
+                        <h3>Customer Reviews</h3>
+                        <p style="margin-top: 10px; color: #666;">Approve reviews and choose exactly 3 to show on the homepage.</p>
+                    </div>
+                    <div class="flex" style="gap: 10px;">
+                        <button onclick="loadAdminReviews()" class="btn-outline"><i class="fa-solid fa-rotate"></i>
+                            Refresh</button>
+                        <button onclick="saveFeaturedReviews()" class="btn"><i class="fa-solid fa-check"></i>
+                            Save Featured (3)</button>
+                    </div>
+                </div>
+                <div style="margin: 10px 0; color: #666; font-size: 0.9rem;">
+                    Selected for homepage: <span id="featured-count">0</span>/3
+                </div>
+                <div id="admin-reviews-list"></div>
             </div>
 
         </main>
@@ -288,6 +310,7 @@
             if (tab === 'categories') loadAdminCategories();
             if (tab === 'brochures') loadAdminBrochures();
             if (tab === 'footer') loadInfoPages();
+            if (tab === 'reviews') loadAdminReviews();
         }
 
         // --- Modals ---
@@ -700,6 +723,128 @@
                 console.error(e);
                 alert('Error loading order details');
             }
+        }
+
+        // --- Reviews ---
+        let adminReviewsCache = [];
+
+        function updateFeaturedCount() {
+            const el = document.getElementById('featured-count');
+            if (!el) return;
+            const count = adminReviewsCache.filter(r => r._selectedFeatured).length;
+            el.textContent = String(count);
+        }
+
+        function toggleFeaturedSelection(id, checked) {
+            const review = adminReviewsCache.find(r => String(r.id) === String(id));
+            if (!review) return;
+
+            // Enforce max 3 selections
+            const currentCount = adminReviewsCache.filter(r => r._selectedFeatured).length;
+            if (checked && currentCount >= 3) {
+                alert('You can feature only 3 reviews.');
+                // Reset checkbox UI
+                const cb = document.getElementById(`feature-${id}`);
+                if (cb) cb.checked = false;
+                return;
+            }
+
+            review._selectedFeatured = Boolean(checked);
+            updateFeaturedCount();
+        }
+
+        async function setReviewApproval(id, approved) {
+            try {
+                await API.put(`/reviews/${id}/approve`, { is_approved: approved });
+                await loadAdminReviews();
+            } catch (e) {
+                alert('Failed to update approval');
+            }
+        }
+
+        async function loadAdminReviews() {
+            const container = document.getElementById('admin-reviews-list');
+            if (!container) return;
+
+            try {
+                const reviews = await API.get('/reviews/all');
+                adminReviewsCache = (reviews || []).map(r => ({
+                    ...r,
+                    _selectedFeatured: Boolean(r.is_featured)
+                }));
+
+                updateFeaturedCount();
+
+                if (adminReviewsCache.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color:#888;">No reviews yet.</p>';
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div style="overflow-x: auto; background: #fff; border: 1px solid #eee; border-radius: 8px;">
+                        <table style="width: 100%; min-width: 900px; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:left; padding: 12px;">Author</th>
+                                    <th style="text-align:center; padding: 12px;">Rating</th>
+                                    <th style="text-align:left; padding: 12px;">Review</th>
+                                    <th style="text-align:center; padding: 12px;">Approved</th>
+                                    <th style="text-align:center; padding: 12px;">Show on Home</th>
+                                    <th style="text-align:left; padding: 12px;">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${adminReviewsCache.map(r => `
+                                    <tr style="border-top: 1px solid #f0f0f0;">
+                                        <td style="padding: 12px; font-weight: 600;">${escapeHtml(r.author_name)}</td>
+                                        <td style="padding: 12px; text-align:center;">${r.rating ? `${r.rating}/5` : '-'}</td>
+                                        <td style="padding: 12px;">${escapeHtml(r.content)}</td>
+                                        <td style="padding: 12px; text-align:center;">
+                                            <input type="checkbox" ${r.is_approved ? 'checked' : ''} onchange="setReviewApproval(${r.id}, this.checked)">
+                                        </td>
+                                        <td style="padding: 12px; text-align:center;">
+                                            <input id="feature-${r.id}" type="checkbox"
+                                                ${r.is_approved ? '' : 'disabled'}
+                                                ${r.is_featured ? 'checked' : ''}
+                                                onchange="toggleFeaturedSelection(${r.id}, this.checked)">
+                                        </td>
+                                        <td style="padding: 12px;">${new Date(r.created_at).toLocaleString()}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<p style="text-align:center; color:#c00;">Failed to load reviews.</p>';
+            }
+        }
+
+        async function saveFeaturedReviews() {
+            const selected = adminReviewsCache.filter(r => r._selectedFeatured).map(r => r.id);
+            if (selected.length !== 3) {
+                alert('Please select exactly 3 reviews to feature on the homepage.');
+                return;
+            }
+
+            try {
+                await API.put('/reviews/featured', { featuredIds: selected });
+                alert('Featured reviews saved.');
+                await loadAdminReviews();
+            } catch (e) {
+                console.error(e);
+                alert('Failed to save featured reviews.');
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
         }
     </script>
     <script src="js/mobile-header.js"></script>

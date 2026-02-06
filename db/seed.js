@@ -81,6 +81,23 @@ async function seed() {
              ON DUPLICATE KEY UPDATE code = code`
         );
 
+        // 4. Default Reviews (only if empty)
+        try {
+            const [rows] = await pool.execute('SELECT COUNT(*) AS cnt FROM reviews');
+            const cnt = rows && rows[0] ? Number(rows[0].cnt) : 0;
+            if (cnt === 0) {
+                await pool.execute(
+                    `INSERT INTO reviews (author_name, rating, content, source, is_approved, is_featured, featured_order)
+                     VALUES
+                     ('Priya S.', 5, 'Absolutely stunning designs! I wore the Kundan set for a wedding and got so many compliments.', 'seed', true, true, 1),
+                     ('Anjali M.', 5, 'Great quality and fast delivery. The packing was also very secure. Will order again!', 'seed', true, true, 2),
+                     ('Sneha R.', 5, 'Loved the earrings. They look just like real gold. Highly recommended.', 'seed', true, true, 3)`
+                );
+            }
+        } catch (e) {
+            // ignore if reviews table doesn't exist yet
+        }
+
         console.log('Seeding Complete.');
     } catch (err) {
         console.error('Seeding error', err);
