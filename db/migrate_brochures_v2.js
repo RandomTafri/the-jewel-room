@@ -1,5 +1,5 @@
 const mysql = require('mysql2/promise');
-require('dotenv').config();
+require('../server/utils/load-env').loadEnv();
 
 function buildPoolConfig() {
     if (process.env.MYSQL_URL) {

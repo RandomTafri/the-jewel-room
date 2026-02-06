@@ -1,7 +1,14 @@
+const { loadEnv, candidateEnvPaths } = require('./utils/load-env');
+const loadedFrom = loadEnv();
+if (loadedFrom) {
+    console.log(`Loaded environment from: ${loadedFrom}`);
+} else {
+    console.log(`No .env found (checked: ${candidateEnvPaths().join(', ')}). Using process environment only.`);
+}
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config();
 const db = require('./db');
 
 const app = express();
