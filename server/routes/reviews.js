@@ -39,6 +39,10 @@ router.get('/featured', async (req, res) => {
 
         return res.json({ reviews: approved.rows, fallback: true });
     } catch (err) {
+        // If migrations weren't run yet (or table was never created), avoid breaking the homepage.
+        if (err && err.code === 'ER_NO_SUCH_TABLE') {
+            return res.json({ reviews: [], fallback: true, missingTable: true });
+        }
         console.error(err);
         res.status(500).json({ error: 'Server error' });
     }
@@ -160,4 +164,3 @@ router.put('/featured', isAdmin, async (req, res) => {
 });
 
 module.exports = router;
-

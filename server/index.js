@@ -10,6 +10,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const db = require('./db');
+const { runMigrations } = require('./utils/migrate');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -65,6 +66,11 @@ app.get('/api/config', (req, res) => {
 (async () => {
     try {
         await db.pingWithRetry();
+        // Optional: create any missing tables/indexes at boot. Safe (additive-only).
+        // Helpful on shared hosts where you may not have a reliable way to run migrations.
+        if ((process.env.AUTO_MIGRATE || 'true').toLowerCase() === 'true') {
+            await runMigrations();
+        }
         app.listen(PORT, () => {
             console.log(`Server running on http://localhost:${PORT}`);
         });
