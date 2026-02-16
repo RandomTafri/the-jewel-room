@@ -1,9 +1,11 @@
 const { loadEnv, candidateEnvPaths } = require('./utils/load-env');
+const logger = require('./utils/fileLogger');
+
 const loadedFrom = loadEnv();
 if (loadedFrom) {
-    console.log(`Loaded environment from: ${loadedFrom}`);
+    logger.log(`Loaded environment from: ${loadedFrom}`);
 } else {
-    console.log(`No .env found (checked: ${candidateEnvPaths().join(', ')}). Using process environment only.`);
+    logger.log(`No .env found (checked: ${candidateEnvPaths().join(', ')}). Using process environment only.`);
 }
 
 const express = require('express');
@@ -65,25 +67,37 @@ app.get('/api/config', (req, res) => {
 
 (async () => {
     try {
+        logger.log('Starting server...');
+        logger.log('Connecting to database...');
         await db.pingWithRetry();
+        logger.log('Database connection successful!');
+
         // Optional: create any missing tables/indexes at boot. Safe (additive-only).
         // Helpful on shared hosts where you may not have a reliable way to run migrations.
         if ((process.env.AUTO_MIGRATE || 'true').toLowerCase() === 'true') {
+            logger.log('Running migrations...');
             await runMigrations();
+            logger.log('Migrations completed');
         }
+
         app.listen(PORT, () => {
-            console.log(`Server running on http://localhost:${PORT}`);
+            logger.log(`Server running on port ${PORT}`);
         });
     } catch (err) {
         // Print useful, non-secret diagnostics for shared hosts (Hostinger, etc.)
         const debugInfo = typeof db.getDbDebugInfo === 'function' ? db.getDbDebugInfo() : {};
-        console.error('Database connection failed during startup:', {
+        const errorDetails = {
             code: err && err.code,
             errno: err && err.errno,
             sqlState: err && err.sqlState,
             message: err && (err.sqlMessage || err.message),
             db: debugInfo
-        });
+        };
+
+        logger.error('Database connection failed during startup', err);
+        logger.error('Debug info', errorDetails);
+        console.error('Database connection failed during startup:', errorDetails);
         process.exit(1);
     }
 })();
+
