@@ -143,7 +143,7 @@
     </section>
 
     <!-- Featured Products -->
-    <section class="section">
+    <section id="featured-products-section" class="section">
         <div class="container">
             <h3 class="text-center">Featured Products</h3>
             <div id="featured-products" class="product-grid" style="margin-top: 30px;">
@@ -164,6 +164,20 @@
             </div>
             <div class="text-center" style="margin-top: 40px;">
                 <a href="brochures.html" class="btn">More Brochures</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Styled Looks (Instagram) -->
+    <section id="styled-looks-section" class="section" style="background-color: #fff;">
+        <div class="container">
+            <h3 class="text-center" style="font-family: 'Cinzel', serif; letter-spacing: 2px;">Styled Looks</h3>
+            <p class="text-center" style="color: #666; margin-bottom: 30px;">Follow us <a
+                    href="https://instagram.com/shree_roop_creative" target="_blank"
+                    style="color: #d4af37;">@shree_roop_creative</a></p>
+
+            <div id="styled-looks-list" class="scrolling-wrapper">
+                <p class="text-center" style="width: 100%;">Loading looks...</p>
             </div>
         </div>
     </section>
@@ -310,6 +324,44 @@
             } catch (e) { console.error(e); }
         }
 
+        async function loadStyledLooks() {
+            try {
+                const looks = await API.get('/instagram');
+                const container = document.getElementById('styled-looks-list');
+
+                if (looks.length === 0) {
+                    container.innerHTML = '<p class="text-center" style="width:100%">Follow our Instagram for latest updates!</p>';
+                    return;
+                }
+
+                container.innerHTML = looks.map(look => `
+                    <div class="collection-item" style="flex: 0 0 200px;">
+                        <a href="${look.link || '#'}" target="_blank">
+                            <div style="width: 200px; height: 250px; overflow: hidden; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                                <img src="${look.image_url}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                            </div>
+                        </a>
+                    </div>
+                `).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadSettings() {
+            try {
+                const settings = await API.get('/settings');
+                // Apply visibility
+                const trendingSec = document.getElementById('featured-products-section');
+                const instaSec = document.getElementById('styled-looks-section');
+
+                if (settings.show_trending === 'false' && trendingSec) {
+                    trendingSec.style.display = 'none';
+                }
+                if (settings.show_instagram === 'false' && instaSec) {
+                    instaSec.style.display = 'none';
+                }
+            } catch (e) { console.error('Settings load error', e); }
+        }
+
         function openWhatsAppContact() {
             const url = `https://wa.me/${State.config.whatsappNumber}?text=${encodeURIComponent("Hi, I would like to know more about your products.")}`;
             window.open(url, '_blank');
@@ -390,7 +442,12 @@
             loadFeatured();
             loadCollections();
             loadBrochures();
+            loadFeatured();
+            loadCollections();
+            loadBrochures();
             loadFeaturedReviews();
+            loadStyledLooks();
+            loadSettings();
             setTimeout(() => {
                 const emailEl = document.getElementById('contact-email');
                 if (emailEl && State.config) {

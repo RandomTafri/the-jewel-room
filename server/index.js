@@ -65,6 +65,8 @@ try {
     app.use('/api/footer', footerRoutes);
     app.use('/api/info-pages', infoPages);
     app.use('/api/reviews', reviewRoutes);
+    app.use('/api/settings', require('./routes/settings'));
+    app.use('/api/instagram', require('./routes/instagram'));
 
     // Config endpoint for frontend
     const config = require('../config');

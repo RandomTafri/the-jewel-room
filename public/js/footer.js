@@ -100,18 +100,18 @@
 
                 // Update email and phone from config (Retry mechanism)
                 const updateConfigData = () => {
-                    if (State.config && State.config.supportEmail) {
-                        const emailEl = document.getElementById('footer-email');
-                        if (emailEl) {
-                            emailEl.innerHTML = `<a href="mailto:${State.config.supportEmail}">${State.config.supportEmail}</a>`;
-                        }
-                        const phoneEl = document.getElementById('footer-phone');
-                        if (phoneEl) {
-                            phoneEl.textContent = State.config.supportPhone || '+91 8397803333';
-                        }
-                        return true; // Success
+                    const email = (State.config && State.config.supportEmail) || 'support@shreeroop.com';
+                    const phone = (State.config && State.config.supportPhone) || '+91 8397803333';
+
+                    const emailEl = document.getElementById('footer-email');
+                    if (emailEl) {
+                        emailEl.innerHTML = `<a href="mailto:${email}">${email}</a>`;
                     }
-                    return false; // Keep retrying
+                    const phoneEl = document.getElementById('footer-phone');
+                    if (phoneEl) {
+                        phoneEl.textContent = phone;
+                    }
+                    return true;
                 };
 
                 // Try immediately
