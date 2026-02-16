@@ -105,27 +105,33 @@ try {
                 await runMigrations();
                 writeStatus('✅ Migrations completed');
             }
-
-            app.listen(PORT, () => {
-                writeStatus(`✅ Server running on port ${PORT}`);
-                writeStatus('🎉 STARTUP COMPLETE - Server is ready!');
-            });
         } catch (err) {
-            const debugInfo = typeof db.getDbDebugInfo === 'function' ? db.getDbDebugInfo() : {};
-            const errorDetails = {
-                code: err && err.code,
-                errno: err && err.errno,
-                sqlState: err && err.sqlState,
-                message: err && (err.sqlMessage || err.message),
-                stack: err && err.stack,
-                db: debugInfo
-            };
-
-            writeError('Database connection failed', err);
-            writeStatus(`Debug info: ${JSON.stringify(debugInfo, null, 2)}`);
-            console.error('[STARTUP] ❌ Database connection failed:', JSON.stringify(errorDetails, null, 2));
-            process.exit(1);
+            writeError('Database connection/migration failed (Server will continue starting)', err);
+            console.error('[STARTUP] ⚠️ Database connection failed, but starting server anyway to allow debugging.');
         }
+
+        app.get('/api/debug-env', (req, res) => {
+            // Security: Only allow this if a secret header is present or temporarily for debugging
+            // For now, listing env vars to help debug Hostinger issue
+            res.json({
+                message: 'Environment Debug',
+                cwd: process.cwd(),
+                env: {
+                    NODE_ENV: process.env.NODE_ENV,
+                    MYSQL_HOST: process.env.MYSQL_HOST,
+                    MYSQL_USER: process.env.MYSQL_USER,
+                    MYSQL_DATABASE: process.env.MYSQL_DATABASE,
+                    HAS_PASSWORD: !!process.env.MYSQL_PASSWORD,
+                    // List all keys to see if they are named differently
+                    ALL_KEYS: Object.keys(process.env)
+                }
+            });
+        });
+
+        app.listen(PORT, () => {
+            writeStatus(`✅ Server running on port ${PORT}`);
+            writeStatus('🎉 STARTUP COMPLETE - Server is ready (DB might be offline)');
+        });
     })();
 
 } catch (err) {
