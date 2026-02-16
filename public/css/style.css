@@ -222,7 +222,7 @@ header .logo img {
     display: inline-block;
     padding: 12px 28px;
     background-color: var(--accent-color);
-    color: #fff;
+    color: #000;
     border: 1px solid var(--accent-color);
     text-transform: uppercase;
     font-size: 0.85rem;
@@ -236,7 +236,7 @@ header .logo img {
 .btn:hover {
     background-color: #b8941f;
     border-color: #b8941f;
-    color: #fff;
+    color: #000;
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
@@ -259,7 +259,7 @@ header .logo img {
 .btn-outline:hover {
     border-color: var(--accent-color);
     background-color: var(--accent-color);
-    color: #fff;
+    color: #000;
 }
 
 .btn-danger {
