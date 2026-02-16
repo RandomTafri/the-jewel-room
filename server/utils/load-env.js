@@ -16,6 +16,12 @@ function candidateEnvPaths() {
 }
 
 function loadEnv() {
+    // In production, skip .env files and use native environment variables from the hosting platform
+    if (process.env.NODE_ENV === 'production') {
+        console.log('Production mode detected - using native environment variables (no .env file loaded)');
+        return null;
+    }
+
     const candidates = candidateEnvPaths();
     for (const p of candidates) {
         try {
