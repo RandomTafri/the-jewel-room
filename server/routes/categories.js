@@ -34,13 +34,13 @@ router.get('/:id/image', async (req, res) => {
 // Admin: Create Category
 router.post('/', isAdmin, upload.single('image'), async (req, res) => {
     try {
-        const { name } = req.body;
-        let image_url = '';
+        const { name, image_url: manualUrl } = req.body;
+        let image_url = manualUrl || '';
 
         if (req.file) {
             if (!isR2Configured()) {
                 return res.status(400).json({
-                    error: 'Image upload not available: R2 storage is not configured.'
+                    error: 'Image upload not available: R2 storage is not configured. Please use a manual image URL instead.'
                 });
             }
             try {
@@ -54,7 +54,7 @@ router.post('/', isAdmin, upload.single('image'), async (req, res) => {
             } catch (uploadErr) {
                 console.error('R2 upload failed:', uploadErr);
                 return res.status(500).json({
-                    error: 'Image upload failed.'
+                    error: 'Image upload failed. Please try using a manual image URL instead.'
                 });
             }
         }
@@ -76,17 +76,17 @@ router.post('/', isAdmin, upload.single('image'), async (req, res) => {
 router.put('/:id', isAdmin, upload.single('image'), async (req, res) => {
     try {
         const { id } = req.params;
-        const { name } = req.body;
+        const { name, image_url: manualUrl } = req.body;
 
         if (!name) {
             return res.status(400).json({ error: 'Name is required' });
         }
 
-        let image_url = null;
+        let image_url = manualUrl || null;
         if (req.file) {
             if (!isR2Configured()) {
                 return res.status(400).json({
-                    error: 'Image upload not available: R2 storage is not configured.'
+                    error: 'Image upload not available: R2 storage is not configured. Please use a manual image URL instead.'
                 });
             }
             try {
@@ -100,7 +100,7 @@ router.put('/:id', isAdmin, upload.single('image'), async (req, res) => {
             } catch (uploadErr) {
                 console.error('R2 upload failed:', uploadErr);
                 return res.status(500).json({
-                    error: 'Image upload failed.'
+                    error: 'Image upload failed. Please try using a manual image URL instead.'
                 });
             }
         }

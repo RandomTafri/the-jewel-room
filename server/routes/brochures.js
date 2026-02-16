@@ -48,14 +48,14 @@ router.get('/:id/file', async (req, res) => {
 // Admin: Upload Brochure (V2: Link + Thumbnail)
 router.post('/', isAdmin, upload.single('image'), async (req, res) => {
     try {
-        const { title, link } = req.body;
+        const { title, link, thumbnail_url: manualUrl } = req.body;
         // image is now the thumbnail
 
-        let thumbnail_url = '';
+        let thumbnail_url = manualUrl || '';
         if (req.file) {
             if (!isR2Configured()) {
                 return res.status(400).json({
-                    error: 'Image upload not available: R2 storage is not configured.'
+                    error: 'Image upload not available: R2 storage is not configured. Please use a manual image URL instead.'
                 });
             }
             try {
@@ -69,7 +69,7 @@ router.post('/', isAdmin, upload.single('image'), async (req, res) => {
             } catch (uploadErr) {
                 console.error('R2 upload failed:', uploadErr);
                 return res.status(500).json({
-                    error: 'Image upload failed.'
+                    error: 'Image upload failed. Please try using a manual image URL instead.'
                 });
             }
         }
