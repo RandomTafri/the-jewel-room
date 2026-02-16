@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Shree Roop Creative</title>
     <link rel="icon" type="image/png" href="images/logo.png">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=2.1">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
@@ -38,14 +38,28 @@
     <!-- Admin Dashboard Panel -->
     <div id="admin-panel" class="admin-layout hidden">
         <!-- Sidebar -->
-        <aside class="sidebar" id="admin-sidebar">
-            <h2 class="flex justify-between items-center">
+        <aside class="sidebar" id="admin-sidebar"
+            style="background-color: #d4af37 !important; color: #1a1a1a !important;">
+            <h2 class="flex justify-between items-center"
+                style="color: #1a1a1a !important; border-bottom-color: rgba(0,0,0,0.1);">
                 Shree Roop Creative
                 <button onclick="toggleAdminSidebar()" class="mobile-only"
-                    style="background:none; border:none; color:white; font-size:1.2rem;"><i
+                    style="background:none; border:none; color:#1a1a1a; font-size:1.2rem;"><i
                         class="fa-solid fa-xmark"></i></button>
             </h2>
-            <nav>
+            <nav id="admin-nav">
+                <style>
+                    /* Inline override for admin sidebar buttons to ensure visibility on Gold */
+                    #admin-nav button {
+                        color: rgba(0, 0, 0, 0.7) !important;
+                    }
+
+                    #admin-nav button:hover,
+                    #admin-nav button.active {
+                        color: #000 !important;
+                        background-color: rgba(255, 255, 255, 0.4) !important;
+                    }
+                </style>
                 <button onclick="switchTab('orders')" id="btn-orders" class="active"><i class="fa-solid fa-box"></i>
                     &nbsp; Orders</button>
                 <button onclick="switchTab('products')" id="btn-products"><i class="fa-solid fa-gem"></i> &nbsp;
