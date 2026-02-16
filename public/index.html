@@ -351,17 +351,24 @@
         async function loadSettings() {
             try {
                 const settings = await API.get('/settings');
-                // Apply visibility
+                // Apply visibility - default to SHOWN
                 const trendingSec = document.getElementById('featured-products-section');
                 const instaSec = document.getElementById('styled-looks-section');
 
-                if (settings.show_trending === 'false' && trendingSec) {
-                    trendingSec.style.display = 'none';
+                if (trendingSec) {
+                    trendingSec.style.display = (settings.show_trending === 'false') ? 'none' : '';
                 }
-                if (settings.show_instagram === 'false' && instaSec) {
-                    instaSec.style.display = 'none';
+                if (instaSec) {
+                    instaSec.style.display = (settings.show_instagram === 'false') ? 'none' : '';
                 }
-            } catch (e) { console.error('Settings load error', e); }
+            } catch (e) {
+                console.error('Settings load error', e);
+                // On error, ensure sections are visible (default)
+                const trendingSec = document.getElementById('featured-products-section');
+                const instaSec = document.getElementById('styled-looks-section');
+                if (trendingSec) trendingSec.style.display = '';
+                if (instaSec) instaSec.style.display = '';
+            }
         }
 
         function openWhatsAppContact() {
@@ -437,9 +444,6 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadFeatured();
-            loadCollections();
-            loadBrochures();
             loadFeatured();
             loadCollections();
             loadBrochures();

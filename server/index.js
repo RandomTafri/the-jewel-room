@@ -73,12 +73,14 @@ try {
     app.get('/api/config', (req, res) => {
         res.json({
             appName: config.appName,
+            currencySymbol: config.currencySymbol,
             enableCOD: config.enableCOD,
             enableOnlinePayment: config.enableOnlinePayment,
             razorpayKeyId: config.razorpayKeyId,
             whatsappNumber: config.whatsappNumber,
             theme: config.theme,
-            supportEmail: config.supportEmail
+            supportEmail: config.supportEmail,
+            supportPhone: config.supportPhone
         });
     });
 
