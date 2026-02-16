@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Shree Roop Creative</title>
     <link rel="icon" type="image/png" href="images/logo.png">
-    <link rel="stylesheet" href="css/style.css?v=2.1">
+    <link rel="stylesheet" href="css/style.css?v=3.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
@@ -58,6 +58,16 @@
                     #admin-nav button.active {
                         color: #000 !important;
                         background-color: rgba(255, 255, 255, 0.4) !important;
+                    }
+
+                    /* Force all .btn buttons to have black text */
+                    .btn,
+                    .btn:hover,
+                    .btn:focus,
+                    .btn:active,
+                    button.btn,
+                    a.btn {
+                        color: #000 !important;
                     }
                 </style>
                 <button onclick="switchTab('orders')" id="btn-orders" class="active"><i class="fa-solid fa-box"></i>
