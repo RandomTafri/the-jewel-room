@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const { authenticateToken, isAdmin } = require('../middleware/auth');
 const Razorpay = require('razorpay');
+const { logRequest, logDbQuery, logError, logSuccess } = require('../utils/apiLogger');
 require('dotenv').config();
 
 //const razorpay = new Razorpay({
@@ -14,9 +15,9 @@ const key_id = process.env.RAZORPAY_KEY_ID;
 const key_secret = process.env.RAZORPAY_KEY_SECRET;
 
 const razorpay =
-  key_id && key_secret
-    ? new Razorpay({ key_id, key_secret })
-    : null;
+    key_id && key_secret
+        ? new Razorpay({ key_id, key_secret })
+        : null;
 
 // In routes: if (!razorpay) return 503 with message "Razorpay not configured"
 
@@ -39,21 +40,26 @@ router.post('/', authenticateToken, async (req, res) => {
             return res.status(503).json({ error: 'Razorpay not configured' });
         }
         // 1. Create Order in DB
+        const params = [
+            req.user.id,
+            customerName ?? null,
+            req.user.email ?? null,
+            customerPhone ?? null,
+            shippingAddress ?? null,
+            totalAmount ?? null,
+            paymentMethod ?? null,
+            JSON.stringify(items),
+            paymentMethod === 'COD' ? 'PENDING' : 'PENDING'
+        ];
+
+        logRequest('POST /orders', 'CREATE', {}, { customerName, paymentMethod, totalAmount });
+        logDbQuery('INSERT INTO orders', params);
+
         const insert = await db.query(
             `INSERT INTO orders 
             (user_id, customer_name, customer_email, customer_phone, shipping_address, total_amount, payment_method, items_snapshot, payment_status)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-                req.user.id,
-                customerName,
-                req.user.email, // Assuming email from token 
-                customerPhone,
-                shippingAddress,
-                totalAmount,
-                paymentMethod,
-                JSON.stringify(items),
-                paymentMethod === 'COD' ? 'PENDING' : 'PENDING'
-            ]
+            params
         );
 
         const orderResult = await db.query('SELECT * FROM orders WHERE id = ?', [insert.rows.insertId]);
@@ -83,7 +89,7 @@ router.post('/', authenticateToken, async (req, res) => {
         });
 
     } catch (err) {
-        console.error(err);
+        logError('POST /orders', err, { customerName, paymentMethod, totalAmount });
         res.status(500).json({ error: 'Order Creation Failed' });
     }
 });

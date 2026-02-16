@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const { authenticateToken } = require('../middleware/auth');
 const { calculateDiscount } = require('../utils/discounts');
+const { logRequest, logDbQuery, logError, logSuccess } = require('../utils/apiLogger');
 
 // Helper: Get Cart (Guest or User)
 async function getOrCreateCart(userId, sessionId) {
@@ -108,9 +109,10 @@ router.post('/', async (req, res) => {
             );
         } else {
             // Insert
+            logRequest('POST /cart', 'ADD ITEM', {}, { productId, quantity: qtyToAdd });
             await db.query(
                 'INSERT INTO cart_items (cart_id, product_id, quantity) VALUES (?, ?, ?)',
-                [cart.id, productId, qtyToAdd]
+                [cart.id, productId ?? null, qtyToAdd ?? null]
             );
         }
         res.json({ message: 'Added to cart' });
@@ -125,13 +127,15 @@ router.put('/update/:itemId', async (req, res) => {
     const { quantity } = req.body;
     const { itemId } = req.params;
     try {
+        logRequest('PUT /cart/update/:itemId', 'UPDATE', { itemId }, { quantity });
         if (quantity <= 0) {
             await db.query('DELETE FROM cart_items WHERE id = ?', [itemId]);
         } else {
-            await db.query('UPDATE cart_items SET quantity = ? WHERE id = ?', [quantity, itemId]);
+            await db.query('UPDATE cart_items SET quantity = ? WHERE id = ?', [quantity ?? null, itemId]);
         }
         res.json({ message: 'Updated' });
     } catch (err) {
+        logError('PUT /cart/update/:itemId', err, { itemId, quantity });
         res.status(500).json({ error: 'Server error' });
     }
 });

@@ -4,6 +4,7 @@ const db = require('../db');
 const { isAdmin } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const { uploadBufferToR2, isR2Configured } = require('../utils/r2');
+const { logRequest, logDbQuery, logError, logSuccess } = require('../utils/apiLogger');
 
 // Get all products (with optional filters)
 router.get('/', async (req, res) => {
@@ -75,6 +76,8 @@ router.get('/:id', async (req, res) => {
 router.post('/', isAdmin, upload.single('image'), async (req, res) => {
     const { name, description, price, category, stock, image_url: manualUrl } = req.body;
 
+    logRequest('POST /products', 'CREATE', {}, req.body);
+
     let image_url = manualUrl || '';
 
     if (req.file) {
@@ -91,9 +94,12 @@ router.post('/', isAdmin, upload.single('image'), async (req, res) => {
     }
 
     try {
+        const params = [name ?? null, description ?? null, price ?? null, category ?? null, image_url ?? null, stock ?? null];
+        logDbQuery('INSERT INTO products', params);
+
         const insert = await db.query(
             'INSERT INTO products (name, description, price, category, image_url, stock) VALUES (?, ?, ?, ?, ?, ?)',
-            [name, description, price, category, image_url, stock]
+            params
         );
         const insertedId = insert.rows.insertId;
         const result = await db.query('SELECT * FROM products WHERE id = ?', [insertedId]);
@@ -109,7 +115,9 @@ router.put('/:id', isAdmin, upload.single('image'), async (req, res) => {
     const { id } = req.params;
     const { name, description, price, category, image_url, stock, is_active } = req.body;
 
-    let nextImageUrl = image_url;
+    logRequest('PUT /products/:id', 'UPDATE', { id }, req.body);
+
+    let nextImageUrl = image_url ?? null;
     if (req.file) {
         if (!isR2Configured()) {
             return res.status(503).json({ error: 'R2 not configured' });
@@ -124,6 +132,19 @@ router.put('/:id', isAdmin, upload.single('image'), async (req, res) => {
     }
 
     try {
+        const params = [
+            name ?? null,
+            description ?? null,
+            price ?? null,
+            category ?? null,
+            nextImageUrl ?? null,
+            stock ?? null,
+            is_active ?? null,
+            id
+        ];
+
+        logDbQuery('UPDATE products', params);
+
         await db.query(
             `UPDATE products SET 
                 name = COALESCE(?, name), 
@@ -134,13 +155,15 @@ router.put('/:id', isAdmin, upload.single('image'), async (req, res) => {
                 stock = COALESCE(?, stock),
                 is_active = COALESCE(?, is_active)
              WHERE id = ?`,
-            [name, description, price, category, nextImageUrl, stock, is_active, id]
+            params
         );
         const result = await db.query('SELECT * FROM products WHERE id = ?', [id]);
         if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+
+        logSuccess('PUT /products/:id', 'Product updated successfully');
         res.json(result.rows[0]);
     } catch (err) {
-        console.error(err);
+        logError('PUT /products/:id', err, { id, body: req.body });
         res.status(500).json({ error: 'Error updating product' });
     }
 });

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { isAdmin, optionalAuth } = require('../middleware/auth');
+const { logRequest, logDbQuery, logError, logSuccess } = require('../utils/apiLogger');
 
 // Get all active footer links (public)
 router.get('/links', async (req, res) => {
@@ -40,7 +41,7 @@ router.post('/links', isAdmin, async (req, res) => {
 
         const result = await db.query(
             'INSERT INTO footer_links (title, url, display_order, is_active) VALUES (?, ?, ?, ?)',
-            [title, url, display_order || 0, is_active !== false]
+            [title, url, display_order ?? 0, is_active !== false]
         );
 
         const created = await db.query('SELECT * FROM footer_links WHERE id = ?', [result.rows.insertId]);
@@ -57,9 +58,14 @@ router.put('/links/:id', isAdmin, async (req, res) => {
         const { id } = req.params;
         const { title, url, display_order, is_active } = req.body;
 
+        logRequest('PUT /footer/links/:id', 'UPDATE', { id }, req.body);
+
+        const params = [title ?? null, url ?? null, display_order ?? null, is_active ?? null, id];
+        logDbQuery('UPDATE footer_links', params);
+
         const result = await db.query(
             'UPDATE footer_links SET title = ?, url = ?, display_order = ?, is_active = ? WHERE id = ?',
-            [title, url, display_order, is_active, id]
+            params
         );
 
         const updated = await db.query('SELECT * FROM footer_links WHERE id = ?', [id]);

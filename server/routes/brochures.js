@@ -4,6 +4,7 @@ const db = require('../db');
 const upload = require('../middleware/upload');
 const { isAdmin } = require('../middleware/auth');
 const { uploadBufferToR2, isR2Configured } = require('../utils/r2');
+const { logRequest, logDbQuery, logError, logSuccess } = require('../utils/apiLogger');
 
 // Get all brochures
 router.get('/', async (req, res) => {
@@ -64,9 +65,13 @@ router.post('/', isAdmin, upload.single('image'), async (req, res) => {
             thumbnail_url = uploadRes.publicUrl;
         }
 
+        const params = [title ?? null, link ?? null, thumbnail_url ?? null];
+        logRequest('POST /brochures', 'CREATE', {}, { title, link });
+        logDbQuery('INSERT INTO brochures', params);
+
         const result = await db.query(
             'INSERT INTO brochures (title, link, thumbnail_url) VALUES (?, ?, ?)',
-            [title, link, thumbnail_url]
+            params
         );
         const created = await db.query('SELECT id, title, link FROM brochures WHERE id = ?', [result.rows.insertId]);
         res.status(201).json(created.rows[0]);
