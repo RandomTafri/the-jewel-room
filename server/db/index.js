@@ -1,5 +1,5 @@
 const mysql = require('mysql2/promise');
-require('dotenv').config();
+// dotenv is handled by server/index.js using load-env.js
 
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
