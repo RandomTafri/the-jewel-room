@@ -11,6 +11,8 @@ function candidateEnvPaths() {
     const candidates = [];
     if (process.env.ENV_FILE) candidates.push(process.env.ENV_FILE);
     candidates.push(path.join(process.cwd(), '.env'));
+    // Look in parent directory (useful for shared hosting persistence)
+    candidates.push(path.join(process.cwd(), '../.env'));
     if (process.env.USER) candidates.push(`/home/${process.env.USER}/secrets/jewelroom.env`);
     return uniq(candidates);
 }
