@@ -476,9 +476,12 @@
                     document.getElementById('p-stock').value = product.stock;
                     document.getElementById('p-cat').value = product.category;
                     document.getElementById('p-img').value = product.image_url;
+                    // Handle various truthy values for checked state
+                    document.getElementById('p-featured').checked = (product.is_featured == 1 || product.is_featured === 'true' || product.is_featured === true);
                 } else {
                     document.getElementById('p-modal-title').innerText = 'Add Product';
                     document.getElementById('p-id').value = '';
+                    document.getElementById('p-featured').checked = false;
                 }
             }
 
@@ -566,25 +569,27 @@
             async function loadAdminProducts() {
                 const products = await API.get('/products');
                 const container = document.getElementById('admin-products-list');
-                container.innerHTML = products.map(p => `
-                <div class="product-card" style="padding: 15px; position: relative;">
-                    <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
-                        <label class="switch" style="font-size: 0.8rem; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.9); padding: 2px 5px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                            <input type="checkbox" ${p.is_featured ? 'checked' : ''} onchange="toggleProductFeatured(${p.id}, this.checked)">
-                            <span style="font-weight: bold; color: #d4af37;">★ Featured</span>
-                        </label>
+                container.innerHTML = products.map(p => {
+                    const isFeatured = (p.is_featured == 1 || p.is_featured === 'true' || p.is_featured === true);
+                    return `
+                    <div class="product-card" style="padding: 15px; position: relative;">
+                        <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+                            <label class="switch" style="font-size: 0.8rem; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.9); padding: 2px 5px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                <input type="checkbox" ${isFeatured ? 'checked' : ''} onchange="toggleProductFeatured(${p.id}, this.checked)">
+                                <span style="font-weight: bold; color: #d4af37;">★ Featured</span>
+                            </label>
+                        </div>
+                        <div style="height: 150px; overflow:hidden; border-radius: 4px; margin-bottom: 10px;">
+                            <img src="${p.image_url || 'https://via.placeholder.com/200'}" style="height: 100%; object-fit: cover;">
+                        </div>
+                        <h4 style="font-size: 1rem; margin-bottom: 5px;">${p.name}</h4>
+                        <p style="font-size: 0.9rem;">${formatPrice(p.price)}</p>
+                        <div class="flex" style="gap: 10px; margin-top: 10px;">
+                            <button onclick='showProductModal(${JSON.stringify(p).replace(/'/g, "&apos;").replace(/"/g, "&quot;")})' class="btn-outline" style="flex:1; padding: 5px;">Edit</button>
+                            <button onclick="deleteProduct(${p.id})" class="btn-danger" style="flex:1; padding: 5px;">Delete</button>
+                        </div>
                     </div>
-                    <div style="height: 150px; overflow:hidden; border-radius: 4px; margin-bottom: 10px;">
-                        <img src="${p.image_url || 'https://via.placeholder.com/200'}" style="height: 100%; object-fit: cover;">
-                    </div>
-                    <h4 style="font-size: 1rem; margin-bottom: 5px;">${p.name}</h4>
-                    <p style="font-size: 0.9rem;">${formatPrice(p.price)}</p>
-                    <div class="flex" style="gap: 10px; margin-top: 10px;">
-                        <button onclick='showProductModal(${JSON.stringify(p).replace(/'/g, "")})' class="btn-outline" style="flex:1; padding: 5px;">Edit</button>
-                        <button onclick="deleteProduct(${p.id})" class="btn-danger" style="flex:1; padding: 5px;">Delete</button>
-                    </div>
-                </div>
-            `).join('');
+                `}).join('');
             }
 
             async function loadCategoryDropdown() {
@@ -610,6 +615,10 @@
                 if (manualUrl) formData.append('image_url', manualUrl);
                 const file = document.getElementById('p-file').files[0];
                 if (file) formData.append('image', file);
+
+                // Add Featured Flag
+                const isFeatured = document.getElementById('p-featured').checked;
+                formData.append('is_featured', isFeatured);
 
                 try {
                     const token = localStorage.getItem('token');
