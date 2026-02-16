@@ -54,15 +54,24 @@ router.post('/', isAdmin, upload.single('image'), async (req, res) => {
         let thumbnail_url = '';
         if (req.file) {
             if (!isR2Configured()) {
-                return res.status(503).json({ error: 'R2 not configured' });
+                return res.status(400).json({
+                    error: 'Image upload not available: R2 storage is not configured.'
+                });
             }
-            const uploadRes = await uploadBufferToR2({
-                buffer: req.file.buffer,
-                contentType: req.file.mimetype,
-                keyPrefix: 'brochures/thumbnail',
-                originalName: req.file.originalname
-            });
-            thumbnail_url = uploadRes.publicUrl;
+            try {
+                const uploadRes = await uploadBufferToR2({
+                    buffer: req.file.buffer,
+                    contentType: req.file.mimetype,
+                    keyPrefix: 'brochures/thumbnail',
+                    originalName: req.file.originalname
+                });
+                thumbnail_url = uploadRes.publicUrl;
+            } catch (uploadErr) {
+                console.error('R2 upload failed:', uploadErr);
+                return res.status(500).json({
+                    error: 'Image upload failed.'
+                });
+            }
         }
 
         const params = [title ?? null, link ?? null, thumbnail_url ?? null];

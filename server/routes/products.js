@@ -82,15 +82,24 @@ router.post('/', isAdmin, upload.single('image'), async (req, res) => {
 
     if (req.file) {
         if (!isR2Configured()) {
-            return res.status(503).json({ error: 'R2 not configured' });
+            return res.status(400).json({
+                error: 'Image upload not available: R2 storage is not configured. Please use a manual image URL instead.'
+            });
         }
-        const upload = await uploadBufferToR2({
-            buffer: req.file.buffer,
-            contentType: req.file.mimetype,
-            keyPrefix: 'products',
-            originalName: req.file.originalname
-        });
-        image_url = upload.publicUrl;
+        try {
+            const upload = await uploadBufferToR2({
+                buffer: req.file.buffer,
+                contentType: req.file.mimetype,
+                keyPrefix: 'products',
+                originalName: req.file.originalname
+            });
+            image_url = upload.publicUrl;
+        } catch (uploadErr) {
+            console.error('R2 upload failed:', uploadErr);
+            return res.status(500).json({
+                error: 'Image upload failed. Please try using a manual image URL instead.'
+            });
+        }
     }
 
     try {
@@ -101,11 +110,11 @@ router.post('/', isAdmin, upload.single('image'), async (req, res) => {
             'INSERT INTO products (name, description, price, category, image_url, stock) VALUES (?, ?, ?, ?, ?, ?)',
             params
         );
-        const insertedId = insert.rows.insertId;
+        const insertedId = insert.insertId;
         const result = await db.query('SELECT * FROM products WHERE id = ?', [insertedId]);
         res.status(201).json(result.rows[0]);
     } catch (err) {
-        console.error(err);
+        logError('POST /products', err, { body: req.body });
         res.status(500).json({ error: 'Error creating product' });
     }
 });
@@ -120,15 +129,24 @@ router.put('/:id', isAdmin, upload.single('image'), async (req, res) => {
     let nextImageUrl = image_url ?? null;
     if (req.file) {
         if (!isR2Configured()) {
-            return res.status(503).json({ error: 'R2 not configured' });
+            return res.status(400).json({
+                error: 'Image upload not available: R2 storage is not configured. Please use a manual image URL instead.'
+            });
         }
-        const upload = await uploadBufferToR2({
-            buffer: req.file.buffer,
-            contentType: req.file.mimetype,
-            keyPrefix: 'products',
-            originalName: req.file.originalname
-        });
-        nextImageUrl = upload.publicUrl;
+        try {
+            const upload = await uploadBufferToR2({
+                buffer: req.file.buffer,
+                contentType: req.file.mimetype,
+                keyPrefix: 'products',
+                originalName: req.file.originalname
+            });
+            nextImageUrl = upload.publicUrl;
+        } catch (uploadErr) {
+            console.error('R2 upload failed:', uploadErr);
+            return res.status(500).json({
+                error: 'Image upload failed. Please try using a manual image URL instead.'
+            });
+        }
     }
 
     try {
@@ -146,12 +164,12 @@ router.put('/:id', isAdmin, upload.single('image'), async (req, res) => {
         logDbQuery('UPDATE products', params);
 
         await db.query(
-            `UPDATE products SET 
-                name = COALESCE(?, name), 
-                description = COALESCE(?, description), 
-                price = COALESCE(?, price), 
-                category = COALESCE(?, category), 
-                image_url = COALESCE(?, image_url), 
+            `UPDATE products SET
+                name = COALESCE(?, name),
+                description = COALESCE(?, description),
+                price = COALESCE(?, price),
+                category = COALESCE(?, category),
+                image_url = COALESCE(?, image_url),
                 stock = COALESCE(?, stock),
                 is_active = COALESCE(?, is_active)
              WHERE id = ?`,
