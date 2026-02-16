@@ -201,6 +201,12 @@
                 <select id="p-cat" required>
                     <option value="">Select Category</option>
                 </select>
+                <div class="flex" style="gap: 15px; align-items: center; margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="p-featured" style="width: auto;">
+                        <span style="font-size: 0.9rem;">Show in Featured Section</span>
+                    </label>
+                </div>
                 <div>
                     <label style="font-size: 0.85rem; color: #666; margin-bottom: 5px; display: block;">Product
                         Image</label>
@@ -215,6 +221,7 @@
 
     <!-- Category Modal -->
     <div id="category-modal" class="modal-overlay hidden">
+
         <div class="modal">
             <div class="flex justify-between items-center mb-20">
                 <h3 id="cat-modal-title" style="margin: 0;">Add Category</h3>
