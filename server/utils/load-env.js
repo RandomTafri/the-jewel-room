@@ -20,14 +20,14 @@ function loadEnv() {
     // This prevents empty/local .env files from overriding Hostinger variables
     if (process.env.MYSQL_HOST) {
         console.log('Environment variables already present (MYSQL_HOST detected). Skipping .env loading.');
+        // Return null to indicate no file was loaded, but we are good.
         return null;
     }
 
-    // In production, skip .env files and use native environment variables from the hosting platform
-    if (process.env.NODE_ENV === 'production') {
-        console.log('Production mode detected - using native environment variables (no .env file loaded)');
-        return null;
-    }
+    // Checking for production mode alone is risky if Hostinger didn't inject vars yet.
+    // If we reached here, MYSQL_HOST is missing, so we SHOULD try to load from .env even in production.
+    console.log('MYSQL_HOST not detected in process.env. Attempting to load from .env file...');
+
 
     const candidates = candidateEnvPaths();
     for (const p of candidates) {
