@@ -12,7 +12,23 @@ try {
     if (loadedFrom) {
         writeStatus(`✅ Loaded environment from: ${loadedFrom}`);
     } else {
-        writeStatus('✅ Using process environment only');
+        writeStatus('✅ Using process environment only (no .env file loaded)');
+    }
+
+    // Debugging: Log available environment variables (security safe)
+    writeStatus('DEBUG: Checking Environment Variables...');
+    const debugEnv = {
+        NODE_ENV: process.env.NODE_ENV,
+        mysql_host: process.env.MYSQL_HOST,
+        mysql_user: process.env.MYSQL_USER,
+        mysql_db: process.env.MYSQL_DATABASE,
+        has_password: process.env.MYSQL_PASSWORD ? 'YES (len=' + process.env.MYSQL_PASSWORD.length + ')' : 'NO',
+        port: process.env.PORT
+    };
+    writeStatus(`Env Vars detected: ${JSON.stringify(debugEnv)}`);
+
+    if (!process.env.MYSQL_USER) {
+        writeStatus('⚠️ WARNING: MYSQL_USER is missing or empty!');
     }
 
     writeStatus('Loading Express dependencies...');
