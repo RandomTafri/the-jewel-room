@@ -96,7 +96,11 @@ router.get('/me', async (req, res) => {
         if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
         res.json({ user: result.rows[0] });
     } catch (err) {
-        res.status(401).json({ error: 'Invalid token' });
+        if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+        console.error('Auth /me error:', err);
+        res.status(500).json({ error: 'Server error check auth' });
     }
 });
 
