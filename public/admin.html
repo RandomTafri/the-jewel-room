@@ -455,9 +455,12 @@
             const container = document.getElementById('admin-products-list');
             container.innerHTML = products.map(p => `
                 <div class="product-card" style="padding: 15px; position: relative;">
-                    ${(p.is_featured == 1 || p.is_featured === true) ?
-                    '<span style="position: absolute; top: 10px; right: 10px; background: gold; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">★ Featured</span>'
-                    : ''}
+                    <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+                        <label class="switch" style="font-size: 0.8rem; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.9); padding: 2px 5px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                            <input type="checkbox" ${p.is_featured ? 'checked' : ''} onchange="toggleProductFeatured(${p.id}, this.checked)">
+                            <span style="font-weight: bold; color: #d4af37;">★ Featured</span>
+                        </label>
+                    </div>
                     <div style="height: 150px; overflow:hidden; border-radius: 4px; margin-bottom: 10px;">
                         <img src="${p.image_url || 'https://via.placeholder.com/200'}" style="height: 100%; object-fit: cover;">
                     </div>
@@ -518,6 +521,26 @@
             } catch (e) {
                 console.error('Save product error:', e);
                 alert('Operation failed');
+            }
+        }
+
+        async function toggleProductFeatured(id, isFeatured) {
+            try {
+                const token = localStorage.getItem('token');
+                await fetch(`/api/products/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ is_featured: isFeatured })
+                });
+                // No need to reload everything, visual state is already updated by checkbox
+            } catch (e) {
+                console.error(e);
+                alert('Failed to update featured status');
+                // Revert checkbox if failed
+                loadAdminProducts();
             }
         }
 
