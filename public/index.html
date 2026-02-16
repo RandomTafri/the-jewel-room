@@ -224,7 +224,30 @@
                 const container = document.getElementById('featured-products');
                 container.innerHTML = '';
 
-                products.slice(0, 4).forEach(p => {
+                // Filter featured products
+                // is_featured can be 1, true, "1", "true" depending on DB/API serialization
+                let featured = products.filter(p => p.is_featured == 1 || p.is_featured === true || p.is_featured === 'true');
+
+                let displayList = [];
+
+                if (featured.length > 4) {
+                    // Scenario A: More than 4 featured -> Show ALL featured
+                    displayList = featured;
+                } else {
+                    // Scenario B: 4 or fewer featured -> Show at least 4 items
+                    // Start with featured ones
+                    displayList = [...featured];
+
+                    // Fill remaining slots with non-featured products
+                    const needed = 4 - displayList.length;
+                    if (needed > 0) {
+                        const others = products.filter(p => !displayList.includes(p));
+                        displayList = displayList.concat(others.slice(0, needed));
+                    }
+                }
+
+                // Render
+                displayList.forEach(p => {
                     const el = document.createElement('div');
                     el.className = 'product-card';
                     el.innerHTML = `
@@ -376,7 +399,7 @@
             }, 500);
         });
     </script>
-<script src="js/mobile-header.js"></script>
+    <script src="js/mobile-header.js"></script>
 </body>
 
 </html>
