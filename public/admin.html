@@ -482,25 +482,29 @@
             if (file) formData.append('image', file);
 
             try {
+                const token = localStorage.getItem('token');
+
                 if (id) {
-                    // Edit
-                    const data = Object.fromEntries(formData.entries());
-                    // Remove file object if strictly JSON PUT, but let's stick to our known limitation or try-catch
-                    // Previous logic: PUT expects JSON. 
-                    const json = {
-                        name: data.name, description: data.description, price: data.price,
-                        category: data.category, stock: data.stock, image_url: manualUrl
-                    };
-                    await API.put(`/products/${id}`, json);
+                    // Edit - Use FormData to support file uploads
+                    await fetch(`/api/products/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: formData
+                    });
                 } else {
-                    const token = localStorage.getItem('token');
+                    // Create - Use FormData
                     await fetch('/api/products', {
-                        method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: formData
                     });
                 }
                 closeModal('product-modal');
                 loadAdminProducts();
-            } catch (e) { alert('Operation failed'); }
+            } catch (e) {
+                console.error('Save product error:', e);
+                alert('Operation failed');
+            }
         }
 
         async function deleteProduct(id) {
