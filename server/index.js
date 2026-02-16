@@ -6,26 +6,14 @@ try {
     writeStatus('🚀 Server startup initiated');
 
     writeStatus('Loading environment...');
-    const { loadEnv, candidateEnvPaths } = require('./utils/load-env');
+    const { loadEnv } = require('./utils/load-env');
 
     const loadedFrom = loadEnv();
     if (loadedFrom) {
         writeStatus(`✅ Loaded environment from: ${loadedFrom}`);
     } else {
-        writeStatus('✅ Using process environment only (no .env file loaded)');
+        writeStatus('✅ Using process environment only (Hostinger mode)');
     }
-
-    // Debugging: Log available environment variables (security safe)
-    writeStatus('DEBUG: Checking Environment Variables...');
-    const debugEnv = {
-        NODE_ENV: process.env.NODE_ENV,
-        mysql_host: process.env.MYSQL_HOST,
-        mysql_user: process.env.MYSQL_USER,
-        mysql_db: process.env.MYSQL_DATABASE,
-        has_password: process.env.MYSQL_PASSWORD ? 'YES (len=' + process.env.MYSQL_PASSWORD.length + ')' : 'NO',
-        port: process.env.PORT
-    };
-    writeStatus(`Env Vars detected: ${JSON.stringify(debugEnv)}`);
 
     if (!process.env.MYSQL_USER) {
         writeStatus('⚠️ WARNING: MYSQL_USER is missing or empty!');
@@ -106,31 +94,14 @@ try {
                 writeStatus('✅ Migrations completed');
             }
         } catch (err) {
-            writeError('Database connection/migration failed (Server will continue starting)', err);
-            console.error('[STARTUP] ⚠️ Database connection failed, but starting server anyway to allow debugging.');
+            writeError('Database connection/migration failed', err);
+            console.error('[STARTUP] ❌ Database connection failed. server will exit.');
+            process.exit(1);
         }
-
-        app.get('/api/debug-env', (req, res) => {
-            // Security: Only allow this if a secret header is present or temporarily for debugging
-            // For now, listing env vars to help debug Hostinger issue
-            res.json({
-                message: 'Environment Debug',
-                cwd: process.cwd(),
-                env: {
-                    NODE_ENV: process.env.NODE_ENV,
-                    MYSQL_HOST: process.env.MYSQL_HOST,
-                    MYSQL_USER: process.env.MYSQL_USER,
-                    MYSQL_DATABASE: process.env.MYSQL_DATABASE,
-                    HAS_PASSWORD: !!process.env.MYSQL_PASSWORD,
-                    // List all keys to see if they are named differently
-                    ALL_KEYS: Object.keys(process.env)
-                }
-            });
-        });
 
         app.listen(PORT, () => {
             writeStatus(`✅ Server running on port ${PORT}`);
-            writeStatus('🎉 STARTUP COMPLETE - Server is ready (DB might be offline)');
+            writeStatus('🎉 STARTUP COMPLETE - Server is ready!');
         });
     })();
 
