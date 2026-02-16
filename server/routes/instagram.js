@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Helper to ensure table exists
+// Helper to ensure table exists with all columns
 async function ensureTable() {
     await db.query(`
         CREATE TABLE IF NOT EXISTS instagram_feed (
@@ -29,6 +29,12 @@ async function ensureTable() {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     `);
+    // Add 'link' column if table existed before it was added
+    try {
+        await db.query(`ALTER TABLE instagram_feed ADD COLUMN link VARCHAR(255)`);
+    } catch (e) {
+        // Column already exists — ignore
+    }
 }
 
 // GET all items
