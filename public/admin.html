@@ -19,7 +19,15 @@
             <h2 style="margin-bottom: 30px;">Admin Access</h2>
             <form onsubmit="adminLogin(event)" style="display: grid; gap: 20px;">
                 <input type="email" name="email" placeholder="Email Address" required>
-                <input type="password" name="password" placeholder="Password" required>
+                <div style="position: relative;">
+                    <input type="password" id="admin-password" name="password" placeholder="Password" required
+                        style="padding-right: 40px; width: 100%;">
+                    <button type="button" onclick="togglePasswordVisibility()"
+                        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666; font-size: 1.1rem;"
+                        aria-label="Toggle password visibility">
+                        <i class="fa-solid fa-eye" id="admin-password-icon"></i>
+                    </button>
+                </div>
                 <button class="btn" style="width: 100%;">Sign In</button>
             </form>
             <p style="margin-top: 20px; font-size: 0.9rem;"><a href="index.html"
@@ -127,7 +135,8 @@
                 <div class="admin-header">
                     <div>
                         <h3>Customer Reviews</h3>
-                        <p style="margin-top: 10px; color: #666;">Approve reviews and choose exactly 3 to show on the homepage.</p>
+                        <p style="margin-top: 10px; color: #666;">Approve reviews and choose exactly 3 to show on the
+                            homepage.</p>
                     </div>
                     <div class="flex" style="gap: 10px;">
                         <button onclick="loadAdminReviews()" class="btn-outline"><i class="fa-solid fa-rotate"></i>
@@ -277,6 +286,21 @@
                 initAdmin();
             } catch (err) {
                 alert('Invalid Credentials');
+            }
+        }
+
+        function togglePasswordVisibility() {
+            const input = document.getElementById('admin-password');
+            const icon = document.getElementById('admin-password-icon');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
             }
         }
 
