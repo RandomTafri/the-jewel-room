@@ -371,16 +371,12 @@
 
         function renderReviewCard(container, review) {
             const card = document.createElement('div');
-            card.style.background = 'white';
-            card.style.padding = '20px';
-            card.style.borderRadius = '5px';
+            card.className = 'review-card';
 
             const contentEl = document.createElement('p');
-            contentEl.style.fontStyle = 'italic';
             contentEl.textContent = `"${review.content}"`;
 
             const nameEl = document.createElement('h5');
-            nameEl.style.marginTop = '15px';
             nameEl.textContent = `- ${review.author_name}`;
 
             card.appendChild(contentEl);

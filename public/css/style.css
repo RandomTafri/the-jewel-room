@@ -353,6 +353,44 @@ input[type="checkbox"] {
     margin-top: 10px;
 }
 
+/* Review Card Styling */
+.review-card {
+    background: #fff;
+    padding: 30px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-top: 3px solid var(--accent-color);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+}
+
+.review-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.review-card p {
+    font-style: italic;
+    color: var(--text-color);
+    margin-bottom: 20px;
+    font-size: 1.05rem;
+    line-height: 1.6;
+}
+
+.review-card h5 {
+    color: var(--accent-color);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    margin-top: auto;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
 /* Admin Specific */
 .admin-layout {
     display: flex;

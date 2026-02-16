@@ -100,8 +100,11 @@
 
                 // Update email and phone from config (Retry mechanism)
                 const updateConfigData = () => {
-                    const email = (State.config && State.config.supportEmail) || 'support@shreeroop.com';
-                    const phone = (State.config && State.config.supportPhone) || '+91 8397803333';
+                    // Use State.config if available, otherwise failover to hardcoded defaults
+                    const config = (typeof State !== 'undefined' && State.config) ? State.config : {};
+
+                    const email = config.supportEmail || 'support@shreeroop.com';
+                    const phone = config.supportPhone || '+91 8397803333';
 
                     const emailEl = document.getElementById('footer-email');
                     if (emailEl) {
@@ -111,7 +114,9 @@
                     if (phoneEl) {
                         phoneEl.textContent = phone;
                     }
-                    return true;
+                    // Return true only if we actually found State.config (dynamic loading)
+                    // If we used defaults, we might still want to retry just in case State loads later.
+                    return Boolean(config.supportEmail);
                 };
 
                 // Try immediately
