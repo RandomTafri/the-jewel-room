@@ -6,11 +6,7 @@ function sleep(ms) {
 }
 
 function buildPoolConfig() {
-    if (process.env.MYSQL_URL) {
-        return process.env.MYSQL_URL;
-    }
-
-    return {
+    const config = process.env.MYSQL_URL ? process.env.MYSQL_URL : {
         host: process.env.MYSQL_HOST || 'localhost',
         port: process.env.MYSQL_PORT ? Number(process.env.MYSQL_PORT) : 3306,
         user: process.env.MYSQL_USER || 'root',
@@ -19,6 +15,17 @@ function buildPoolConfig() {
         waitForConnections: true,
         connectionLimit: 10
     };
+
+    // Log the config being used (masking password)
+    try {
+        const { writeStatus } = require('../utils/statusLogger');
+        const debugConfig = typeof config === 'string' ? { url: 'HIDDEN' } : { ...config, password: config.password ? '***' : 'EMPTY' };
+        writeStatus(`DB Config: ${JSON.stringify(debugConfig)}`);
+    } catch (e) {
+        console.log('DB Config:', config.user, 'REDACTED');
+    }
+
+    return config;
 }
 
 function getDbDebugInfo() {
@@ -33,7 +40,16 @@ function getDbDebugInfo() {
     };
 }
 
-const pool = mysql.createPool(buildPoolConfig());
+let pool;
+try {
+    pool = mysql.createPool(buildPoolConfig());
+} catch (err) {
+    try {
+        const { writeError } = require('../utils/statusLogger');
+        writeError('Failed to create DB pool', err);
+    } catch (e) { }
+    throw err;
+}
 
 function isTransientDbError(err) {
     // Retry only on connection-ish failures, not on auth/schema problems.
