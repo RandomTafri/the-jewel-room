@@ -275,7 +275,9 @@
                     container.appendChild(el);
                 });
             } catch (e) {
-                console.error(e);
+                console.error('Error loading featured products:', e);
+                const container = document.getElementById('featured-products');
+                if (container) container.innerHTML = '<p class="text-center">Unable to load products. Please check connection.</p>';
             }
         }
 
