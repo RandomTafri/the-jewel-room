@@ -22,6 +22,12 @@
             /* justify-content: center;  Removed to allow left-align scrolling */
         }
 
+        @media (min-width: 768px) {
+            .scrolling-wrapper {
+                justify-content: center;
+            }
+        }
+
         .scrolling-wrapper::-webkit-scrollbar {
             height: 8px;
         }
@@ -241,10 +247,11 @@
     <script src="js/app.js"></script>
     <script src="js/footer.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadSettings(); // Load visibility settings first
             loadFeatured();
-            loadTrending();
-            loadStyledLooks();
+            if (State.settings['show_trending'] === 'true') loadTrending();
+            if (State.settings['show_instagram'] === 'true') loadStyledLooks();
             loadCollections();
             loadBrochures();
             loadFeaturedReviews();
@@ -255,6 +262,16 @@
                 }
             }, 500);
         });
+
+        // Load Settings
+        async function loadSettings() {
+            try {
+                // Default fallback
+                State.settings = { show_trending: 'true', show_instagram: 'true' };
+                const settings = await API.get('/settings');
+                if (settings) State.settings = { ...State.settings, ...settings };
+            } catch (e) { console.error('Settings load error', e); }
+        }
 
         // Load Featured
         async function loadFeatured() {

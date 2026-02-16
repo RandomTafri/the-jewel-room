@@ -61,6 +61,9 @@
                 <button onclick="switchTab('instagram')" id="btn-instagram"><i class="fa-brands fa-instagram"></i>
                     &nbsp;
                     Styled Looks</button>
+                <div style="border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;"></div>
+                <button onclick="switchTab('settings')" id="btn-settings"><i class="fa-solid fa-cog"></i> &nbsp;
+                    Settings</button>
             </nav>
             <div style="margin-top: auto;">
                 <a href="index.html"
@@ -403,6 +406,32 @@
             if (tab === 'footer') loadInfoPages();
             if (tab === 'reviews') loadAdminReviews();
             if (tab === 'instagram') loadAdminInstagram();
+            if (tab === 'settings') loadAdminSettings();
+        }
+
+        async function loadAdminSettings() {
+            try {
+                const settings = await API.get('/settings');
+                // Default checks if not present
+                document.getElementById('setting-trending').checked = settings.show_trending !== 'false';
+                document.getElementById('setting-instagram').checked = settings.show_instagram !== 'false';
+            } catch (e) { console.error(e); }
+        }
+
+        async function saveAdminSettings() {
+            const data = {
+                show_trending: document.getElementById('setting-trending').checked,
+                show_instagram: document.getElementById('setting-instagram').checked
+            };
+            try {
+                const token = localStorage.getItem('token');
+                await fetch('/api/settings', {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                alert('Settings saved!');
+            } catch (e) { alert('Save failed'); }
         }
 
         // --- Modals ---

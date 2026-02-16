@@ -26,6 +26,21 @@ async function updateDB() {
         `);
         console.log('instagram_feed table created/verified.');
 
+        console.log('Creating site_settings table...');
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS site_settings (
+                setting_key VARCHAR(50) PRIMARY KEY,
+                setting_value TEXT
+            )
+        `);
+        // Seed default values
+        await db.query(`
+            INSERT IGNORE INTO site_settings (setting_key, setting_value) VALUES 
+            ('show_trending', 'true'),
+            ('show_instagram', 'true')
+        `);
+        console.log('site_settings table created/verified.');
+
         process.exit(0);
     } catch (err) {
         console.error('Fatal error:', err);

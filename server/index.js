@@ -67,6 +67,7 @@ try {
     app.use('/api/reviews', reviewRoutes);
     app.use('/api/setup', require('./routes/setup')); // Migration route
     app.use('/api/instagram', require('./routes/instagram')); // Styled Looks route
+    app.use('/api/settings', require('./routes/settings')); // Site Settings route
 
     // Config endpoint for frontend
     const config = require('../config');
