@@ -65,6 +65,8 @@ try {
     app.use('/api/footer', footerRoutes);
     app.use('/api/info-pages', infoPages);
     app.use('/api/reviews', reviewRoutes);
+    app.use('/api/setup', require('./routes/setup')); // Migration route
+    app.use('/api/instagram', require('./routes/instagram')); // Styled Looks route
 
     // Config endpoint for frontend
     const config = require('../config');

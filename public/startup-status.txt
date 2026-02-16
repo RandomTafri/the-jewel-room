@@ -1,0 +1,13 @@
+Server Startup Log - 2026-02-16T18:54:39.252Z
+============================================================
+[2026-02-16T18:54:39.254Z] 🚀 Server startup initiated
+[2026-02-16T18:54:39.261Z] Loading environment...
+[2026-02-16T18:54:39.268Z] ✅ Loaded environment from: /Users/nkgarg/Documents/polar-feynman/.env
+[2026-02-16T18:54:39.268Z] Loading Express dependencies...
+[2026-02-16T18:54:39.385Z] Loading database module...
+[2026-02-16T18:54:39.388Z] ❌ ERROR: CRITICAL ERROR during module loading
+{
+  "message": "Cannot find module 'mysql2/promise'\nRequire stack:\n- /Users/nkgarg/Documents/polar-feynman/server/db/index.js\n- /Users/nkgarg/Documents/polar-feynman/server/index.js\n- /Users/nkgarg/Documents/polar-feynman/app.js",
+  "code": "MODULE_NOT_FOUND",
+  "stack": "Error: Cannot find module 'mysql2/promise'\nRequire stack:\n- /Users/nkgarg/Documents/polar-feynman/server/db/index.js\n- /Users/nkgarg/Documents/polar-feynman/server/index.js\n- /Users/nkgarg/Documents/polar-feynman/app.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1369:15)\n    at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)\n    at Module._load (node:internal/modules/cjs/loader:1179:37)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)\n    at Module.require (node:internal/modules/cjs/loader:1449:12)\n    at require (node:internal/modules/helpers:135:16)\n    at Object.<anonymous> (/Users/nkgarg/Documents/polar-feynman/server/db/index.js:1:15)\n    at Module._compile (node:internal/modules/cjs/loader:1692:14)"
+}

@@ -34,7 +34,11 @@ router.get('/', async (req, res) => {
             query += ` AND price <= ?`;
         }
 
-        query += ' ORDER BY is_featured DESC, created_at DESC';
+        if (req.query.trending === 'true') {
+            query += ` AND is_trending = true`;
+        }
+
+        query += ' ORDER BY is_featured DESC, is_trending DESC, created_at DESC';
 
         const result = await db.query(query, params);
         res.json(result.rows);
@@ -84,12 +88,13 @@ router.post('/', isAdmin, upload.single('image'), async (req, res) => {
             category ?? null,
             image_url ?? null,
             stock ?? null,
-            is_featured === 'true' || is_featured === true // Handle string or boolean
+            is_featured === 'true' || is_featured === true, // Handle string or boolean
+            req.body.is_trending === 'true' || req.body.is_trending === true
         ];
         logDbQuery('INSERT INTO products', params);
 
         const insert = await db.query(
-            'INSERT INTO products (name, description, price, category, image_url, stock, is_featured) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO products (name, description, price, category, image_url, stock, is_featured, is_trending) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
             params
         );
         const insertedId = insert.insertId;
@@ -142,6 +147,7 @@ router.put('/:id', isAdmin, upload.single('image'), async (req, res) => {
             stock ?? null,
             is_active ?? null,
             is_featured !== undefined ? (is_featured === 'true' || is_featured === true) : null,
+            req.body.is_trending !== undefined ? (req.body.is_trending === 'true' || req.body.is_trending === true) : null,
             id
         ];
 
@@ -156,7 +162,8 @@ router.put('/:id', isAdmin, upload.single('image'), async (req, res) => {
                 image_url = COALESCE(?, image_url),
                 stock = COALESCE(?, stock),
                 is_active = COALESCE(?, is_active),
-                is_featured = COALESCE(?, is_featured)
+                is_featured = COALESCE(?, is_featured),
+                is_trending = COALESCE(?, is_trending)
              WHERE id = ?`,
             params
         );

@@ -12,14 +12,14 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Horizontal Scroll for Collections */
+        /* Horizontal Scroll for Collections & Trending */
         .scrolling-wrapper {
             display: flex;
             overflow-x: auto;
             gap: 20px;
             padding-bottom: 20px;
             -webkit-overflow-scrolling: touch;
-            justify-content: center;
+            /* justify-content: center;  Removed to allow left-align scrolling */
         }
 
         .scrolling-wrapper::-webkit-scrollbar {
@@ -142,6 +142,30 @@
         </div>
     </section>
 
+    <!-- Shop By Occasion (Replaced by Trending & Styled Looks) -->
+
+    <!-- Trending Carousel -->
+    <section class="section">
+        <div class="container">
+            <h3 class="text-center" style="margin-bottom: 20px;">Trending Now</h3>
+            <div id="trending-products" class="scrolling-wrapper" style="gap: 20px; padding: 10px 0;">
+                <p class="text-center" style="width:100%;">Loading trending items...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Styled Looks (Instagram Feed) -->
+    <section class="section" style="background-color: #fff;">
+        <div class="container">
+            <h3 class="text-center" style="margin-bottom: 20px;">Styled Looks</h3>
+            <p class="text-center" style="color: #777; margin-bottom: 30px;">Follow us on Instagram for daily
+                inspiration.</p>
+            <div id="styled-looks-list" class="scrolling-wrapper" style="gap: 15px;">
+                <p class="text-center" style="width:100%;">Loading feed...</p>
+            </div>
+        </div>
+    </section>
+
     <!-- Featured Products -->
     <section class="section">
         <div class="container">
@@ -217,6 +241,21 @@
     <script src="js/app.js"></script>
     <script src="js/footer.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFeatured();
+            loadTrending();
+            loadStyledLooks();
+            loadCollections();
+            loadBrochures();
+            loadFeaturedReviews();
+            setTimeout(() => {
+                const emailEl = document.getElementById('contact-email');
+                if (emailEl && State.config) {
+                    emailEl.innerHTML = `<a href="mailto:${State.config.supportEmail}" style="color: inherit; text-decoration: underline;">${State.config.supportEmail}</a>`;
+                }
+            }, 500);
+        });
+
         // Load Featured
         async function loadFeatured() {
             try {
@@ -386,18 +425,47 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadFeatured();
-            loadCollections();
-            loadBrochures();
-            loadFeaturedReviews();
-            setTimeout(() => {
-                const emailEl = document.getElementById('contact-email');
-                if (emailEl && State.config) {
-                    emailEl.innerHTML = `<a href="mailto:${State.config.supportEmail}" style="color: inherit; text-decoration: underline;">${State.config.supportEmail}</a>`;
+
+        async function loadTrending() {
+            try {
+                const products = await API.get('/products?trending=true');
+                const container = document.getElementById('trending-products');
+
+                if (products.length === 0) {
+                    container.innerHTML = '<p class="text-center w-full">No trending items yet.</p>';
+                    return;
                 }
-            }, 500);
-        });
+
+                container.innerHTML = products.map(p => `
+                    <div class="product-card" style="flex: 0 0 250px; margin-bottom: 0;">
+                        <img src="${p.image_url || 'https://via.placeholder.com/200'}" alt="${p.name}">
+                        <div class="card-info">
+                            <h4>${p.name}</h4>
+                            <p>${formatPrice(p.price)}</p>
+                            <a href="product.html?id=${p.id}" class="btn-outline">View</a>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadStyledLooks() {
+            try {
+                const items = await API.get('/instagram');
+                const container = document.getElementById('styled-looks-list');
+
+                if (items.length === 0) {
+                    container.innerHTML = '<p class="text-center w-full">Stay tuned for updates.</p>';
+                    return;
+                }
+
+                container.innerHTML = items.map(i => `
+                    <div style="flex: 0 0 200px; height: 200px; border-radius: 8px; overflow: hidden; position: relative; cursor: pointer;" onclick="window.open('${i.post_url || '#'}', '_blank')">
+                        <img src="${i.image_url}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;">
+                    </div>
+                `).join('');
+            } catch (e) { console.error(e); }
+        }
     </script>
     <script src="js/mobile-header.js"></script>
 </body>
