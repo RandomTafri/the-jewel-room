@@ -98,33 +98,31 @@
             if (footerElement) {
                 footerElement.innerHTML = footerHTML;
 
-                // Update email and phone from config (Retry mechanism)
-                const updateConfigData = () => {
-                    if (State.config && State.config.supportEmail) {
-                        const emailEl = document.getElementById('footer-email');
-                        if (emailEl) {
-                            emailEl.innerHTML = `<a href="mailto:${State.config.supportEmail}">${State.config.supportEmail}</a>`;
-                        }
-                        const phoneEl = document.getElementById('footer-phone');
-                        if (phoneEl) {
-                            phoneEl.textContent = State.config.supportPhone || '+91 8397803333';
-                        }
-                        return true; // Success
-                    }
-                    return false; // Keep retrying
-                };
+                const email = (State.config && State.config.supportEmail) || 'support@shreeroop.com';
+                const phone = (State.config && State.config.supportPhone) || '+91 8397803333';
 
-                // Try immediately
-                if (!updateConfigData()) {
-                    // Retry every 500ms max 10 times
-                    let attempts = 0;
-                    const interval = setInterval(() => {
-                        attempts++;
-                        if (updateConfigData() || attempts > 10) {
-                            clearInterval(interval);
-                        }
-                    }, 500);
+                const emailEl = document.getElementById('footer-email');
+                if (emailEl) {
+                    emailEl.innerHTML = `<a href="mailto:${email}">${email}</a>`;
                 }
+                const phoneEl = document.getElementById('footer-phone');
+                if (phoneEl) {
+                    phoneEl.textContent = phone;
+                }
+                return true;
+
+            };
+
+            // Try immediately
+            if (!updateConfigData()) {
+                // Retry every 500ms max 10 times
+                let attempts = 0;
+                const interval = setInterval(() => {
+                    attempts++;
+                    if (updateConfigData() || attempts > 10) {
+                        clearInterval(interval);
+                    }
+                }, 500);
             }
         } catch (error) {
             console.error('Error loading footer:', error);
