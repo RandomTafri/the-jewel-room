@@ -48,7 +48,7 @@ router.get('/', async (req, res) => {
 
 // Admin: Create Product
 router.post('/', isAdmin, upload.single('image'), async (req, res) => {
-    const { name, description, price, category, stock, image_url: manualUrl, is_featured } = req.body;
+    const { name, description, price, category, stock, image_url: manualUrl, is_featured, is_trending } = req.body;
 
     logRequest('POST /products', 'CREATE', {}, req.body);
 
@@ -84,12 +84,13 @@ router.post('/', isAdmin, upload.single('image'), async (req, res) => {
             category ?? null,
             image_url ?? null,
             stock ?? null,
-            is_featured === 'true' || is_featured === true // Handle string or boolean
+            is_featured === 'true' || is_featured === true,
+            is_trending === 'true' || is_trending === true
         ];
         logDbQuery('INSERT INTO products', params);
 
         const insert = await db.query(
-            'INSERT INTO products (name, description, price, category, image_url, stock, is_featured) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO products (name, description, price, category, image_url, stock, is_featured, is_trending) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
             params
         );
         const insertedId = insert.insertId;
@@ -104,7 +105,7 @@ router.post('/', isAdmin, upload.single('image'), async (req, res) => {
 // Admin: Update Product
 router.put('/:id', isAdmin, upload.single('image'), async (req, res) => {
     const { id } = req.params;
-    const { name, description, price, category, image_url: manualUrl, stock, is_active, is_featured } = req.body;
+    const { name, description, price, category, image_url: manualUrl, stock, is_active, is_featured, is_trending } = req.body;
 
     logRequest('PUT /products/:id', 'UPDATE', { id }, req.body);
 
@@ -142,6 +143,7 @@ router.put('/:id', isAdmin, upload.single('image'), async (req, res) => {
             stock ?? null,
             is_active ?? null,
             is_featured !== undefined ? (is_featured === 'true' || is_featured === true) : null,
+            is_trending !== undefined ? (is_trending === 'true' || is_trending === true) : null,
             id
         ];
 
@@ -156,7 +158,8 @@ router.put('/:id', isAdmin, upload.single('image'), async (req, res) => {
                 image_url = COALESCE(?, image_url),
                 stock = COALESCE(?, stock),
                 is_active = COALESCE(?, is_active),
-                is_featured = COALESCE(?, is_featured)
+                is_featured = COALESCE(?, is_featured),
+                is_trending = COALESCE(?, is_trending)
              WHERE id = ?`,
             params
         );

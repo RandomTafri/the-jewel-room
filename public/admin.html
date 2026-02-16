@@ -268,9 +268,13 @@
                 <select id="p-cat" required>
                     <option value="">Select Category</option>
                 </select>
-                <div class="flex" style="gap: 15px; align-items: center; margin-bottom: 15px;">
+                <div class="flex" style="gap: 15px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
                     <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
                         <input type="checkbox" id="p-featured" style="width: 20px; height: 20px;">
+                        <span style="font-size: 0.9rem;">Show in Featured Section</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="p-trending" style="width: 20px; height: 20px;">
                         <span style="font-size: 0.9rem;">Show in Trending Section</span>
                     </label>
                 </div>
@@ -479,10 +483,12 @@
                 document.getElementById('p-img').value = product.image_url;
                 // Handle various truthy values for checked state
                 document.getElementById('p-featured').checked = (product.is_featured == 1 || product.is_featured === 'true' || product.is_featured === true);
+                document.getElementById('p-trending').checked = (product.is_trending == 1 || product.is_trending === 'true' || product.is_trending === true);
             } else {
                 document.getElementById('p-modal-title').innerText = 'Add Product';
                 document.getElementById('p-id').value = '';
                 document.getElementById('p-featured').checked = false;
+                document.getElementById('p-trending').checked = false;
             }
         }
 
@@ -572,13 +578,18 @@
             const container = document.getElementById('admin-products-list');
             container.innerHTML = products.map(p => {
                 const isFeatured = (p.is_featured == 1 || p.is_featured === 'true' || p.is_featured === true);
+                const isTrending = (p.is_trending == 1 || p.is_trending === 'true' || p.is_trending === true);
                 return `
                     <div class="product-card" style="padding: 15px; position: relative;">
-                        <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
-                            <label class="switch" style="font-size: 0.8rem; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.9); padding: 2px 5px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                                <input type="checkbox" ${isFeatured ? 'checked' : ''} onchange="toggleProductFeatured(${p.id}, this.checked)">
-                            <span style="font-weight: bold; color: #d4af37;">★ Trending</span>
-                        </label>
+                        <div style="position: absolute; top: 10px; right: 10px; z-index: 10; display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 0.75rem; display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer;">
+                                <input type="checkbox" ${isFeatured ? 'checked' : ''} onchange="toggleProductFlag(${p.id}, 'is_featured', this.checked)">
+                                <span style="font-weight: bold; color: #d4af37;">★ Featured</span>
+                            </label>
+                            <label style="font-size: 0.75rem; display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer;">
+                                <input type="checkbox" ${isTrending ? 'checked' : ''} onchange="toggleProductFlag(${p.id}, 'is_trending', this.checked)">
+                                <span style="font-weight: bold; color: #e67e22;">🔥 Trending</span>
+                            </label>
                         </div>
                         <div style="height: 150px; overflow:hidden; border-radius: 4px; margin-bottom: 10px;">
                             <img src="${p.image_url || 'https://via.placeholder.com/200'}" style="height: 100%; object-fit: cover;">
@@ -617,9 +628,11 @@
             const file = document.getElementById('p-file').files[0];
             if (file) formData.append('image', file);
 
-            // Add Featured Flag
+            // Add Featured & Trending Flags
             const isFeatured = document.getElementById('p-featured').checked;
             formData.append('is_featured', isFeatured);
+            const isTrending = document.getElementById('p-trending').checked;
+            formData.append('is_trending', isTrending);
 
             try {
                 const token = localStorage.getItem('token');
@@ -647,16 +660,18 @@
             }
         }
 
-        async function toggleProductFeatured(id, isFeatured) {
+        async function toggleProductFlag(id, flag, value) {
             try {
                 const token = localStorage.getItem('token');
+                const body = {};
+                body[flag] = value;
                 await fetch(`/api/products/${id}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ is_featured: isFeatured })
+                    body: JSON.stringify(body)
                 });
                 // No need to reload everything, visual state is already updated by checkbox
             } catch (e) {
