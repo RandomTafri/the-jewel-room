@@ -1,24 +1,29 @@
 // Wrap everything in try-catch to catch module loading errors
 try {
-    console.log('[STARTUP] Loading environment...');
+    const { writeStatus, clearStatus, writeError } = require('./utils/statusLogger');
+
+    clearStatus();
+    writeStatus('🚀 Server startup initiated');
+
+    writeStatus('Loading environment...');
     const { loadEnv, candidateEnvPaths } = require('./utils/load-env');
 
     const loadedFrom = loadEnv();
     if (loadedFrom) {
-        console.log(`[STARTUP] Loaded environment from: ${loadedFrom}`);
+        writeStatus(`✅ Loaded environment from: ${loadedFrom}`);
     } else {
-        console.log(`[STARTUP] No .env found. Using process environment only.`);
+        writeStatus('✅ Using process environment only');
     }
 
-    console.log('[STARTUP] Loading dependencies...');
+    writeStatus('Loading Express dependencies...');
     const express = require('express');
     const cors = require('cors');
     const path = require('path');
 
-    console.log('[STARTUP] Loading database module...');
+    writeStatus('Loading database module...');
     const db = require('./db');
 
-    console.log('[STARTUP] Loading migrations module...');
+    writeStatus('Loading migrations module...');
     const { runMigrations } = require('./utils/migrate');
 
     const app = express();
@@ -29,7 +34,7 @@ try {
     app.use(express.json());
     app.use(express.static(path.join(__dirname, '../public')));
 
-    console.log('[STARTUP] Loading routes...');
+    writeStatus('Loading route modules...');
     // Routes
     const authRoutes = require('./routes/auth');
     const productRoutes = require('./routes/products');
@@ -42,6 +47,8 @@ try {
     const footerRoutes = require('./routes/footer');
     const infoPages = require('./routes/info-pages');
     const reviewRoutes = require('./routes/reviews');
+
+    writeStatus('✅ All modules loaded successfully');
 
     app.use('/api/auth', authRoutes);
     app.use('/api/products', productRoutes);
@@ -69,22 +76,23 @@ try {
         });
     });
 
-    console.log('[STARTUP] Starting server...');
+    writeStatus('Starting server initialization...');
 
     (async () => {
         try {
-            console.log('[STARTUP] Connecting to database...');
+            writeStatus('Attempting database connection...');
             await db.pingWithRetry();
-            console.log('[STARTUP] ✅ Database connection successful!');
+            writeStatus('✅ Database connection successful!');
 
             if ((process.env.AUTO_MIGRATE || 'true').toLowerCase() === 'true') {
-                console.log('[STARTUP] Running migrations...');
+                writeStatus('Running database migrations...');
                 await runMigrations();
-                console.log('[STARTUP] ✅ Migrations completed');
+                writeStatus('✅ Migrations completed');
             }
 
             app.listen(PORT, () => {
-                console.log(`[STARTUP] ✅ Server running on port ${PORT}`);
+                writeStatus(`✅ Server running on port ${PORT}`);
+                writeStatus('🎉 STARTUP COMPLETE - Server is ready!');
             });
         } catch (err) {
             const debugInfo = typeof db.getDbDebugInfo === 'function' ? db.getDbDebugInfo() : {};
@@ -97,12 +105,17 @@ try {
                 db: debugInfo
             };
 
+            writeError('Database connection failed', err);
+            writeStatus(`Debug info: ${JSON.stringify(debugInfo, null, 2)}`);
             console.error('[STARTUP] ❌ Database connection failed:', JSON.stringify(errorDetails, null, 2));
             process.exit(1);
         }
     })();
 
 } catch (err) {
+    // This catch block handles errors during module loading
+    const { writeError } = require('./utils/statusLogger');
+    writeError('CRITICAL ERROR during module loading', err);
     console.error('[STARTUP] ❌ CRITICAL ERROR during module loading:');
     console.error('[STARTUP] Error:', err.message);
     console.error('[STARTUP] Stack:', err.stack);
