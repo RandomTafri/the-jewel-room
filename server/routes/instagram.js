@@ -44,25 +44,33 @@ router.get('/', async (req, res) => {
 });
 
 // POST new item (Admin only)
-router.post('/', isAdmin, upload.single('image'), async (req, res) => {
-    try {
-        await ensureTable();
-        let imageUrl = req.body.image_url;
-        if (req.file) {
-            imageUrl = '/uploads/instagram/' + req.file.filename;
+router.post('/', isAdmin, (req, res) => {
+    upload.single('image')(req, res, async (err) => {
+        if (err) {
+            console.error('Multer upload error:', err);
+            return res.status(500).json({ error: 'Image upload failed: ' + err.message });
         }
 
-        if (!imageUrl) return res.status(400).json({ error: 'Image required' });
+        try {
+            await ensureTable();
+            let imageUrl = req.body.image_url;
+            if (req.file) {
+                // Return relative path
+                imageUrl = '/uploads/instagram/' + req.file.filename;
+            }
 
-        await db.query(
-            'INSERT INTO instagram_feed (image_url, link) VALUES (?, ?)',
-            [imageUrl, req.body.link || '#']
-        );
-        res.json({ message: 'Added successfully' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Server error' });
-    }
+            if (!imageUrl) return res.status(400).json({ error: 'Image required (file or URL)' });
+
+            await db.query(
+                'INSERT INTO instagram_feed (image_url, link, created_at) VALUES (?, ?, NOW())',
+                [imageUrl, req.body.link || '#']
+            );
+            res.json({ message: 'Added successfully', image_url: imageUrl });
+        } catch (dbErr) {
+            console.error('Database error in POST /instagram:', dbErr);
+            res.status(500).json({ error: 'Database error: ' + dbErr.message });
+        }
+    });
 });
 
 // DELETE item (Admin only)

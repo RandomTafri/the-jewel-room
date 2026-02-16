@@ -100,8 +100,13 @@
 
                 // Update email and phone from config (Retry mechanism)
                 const updateConfigData = () => {
-                    // Use State.config if available, otherwise failover to hardcoded defaults
-                    const config = (typeof State !== 'undefined' && State.config) ? State.config : {};
+                    let config = {};
+                    if (typeof State !== 'undefined' && State.config) {
+                        config = State.config;
+                    } else if (window.State && window.State.config) {
+                        config = window.State.config;
+                    }
+
                     console.log('Footer Config Update:', config);
 
                     const email = config.supportEmail || 'support@shreeroop.com';
@@ -109,33 +114,38 @@
 
                     const emailEl = document.getElementById('footer-email');
                     if (emailEl) {
-                        emailEl.innerHTML = `<a href="mailto:${email}">${email}</a>`;
+                        // Only update if not already set to avoid flickering, or if we have real config
+                        if (emailEl.textContent === '...' || config.supportEmail) {
+                            emailEl.innerHTML = `<a href="mailto:${email}">${email}</a>`;
+                        }
                     } else {
                         console.warn('Footer email element not found');
                     }
+
                     const phoneEl = document.getElementById('footer-phone');
                     if (phoneEl) {
-                        phoneEl.textContent = phone;
+                        if (phoneEl.textContent === '...' || config.supportPhone) {
+                            phoneEl.textContent = phone;
+                        }
                     } else {
                         console.warn('Footer phone element not found');
                     }
 
-                    // Return true only if we actually found State.config (dynamic loading)
-                    // If we used defaults, we might still want to retry just in case State loads later.
                     return Boolean(config.supportEmail);
                 };
 
-                // Try immediately
-                if (!updateConfigData()) {
-                    // Retry every 500ms max 10 times
-                    let attempts = 0;
-                    const interval = setInterval(() => {
-                        attempts++;
-                        if (updateConfigData() || attempts > 10) {
-                            clearInterval(interval);
-                        }
-                    }, 500);
-                }
+                // Try immediately to set defaults
+                updateConfigData();
+
+                // Retry logic for dynamic config
+                let attempts = 0;
+                const interval = setInterval(() => {
+                    attempts++;
+                    const success = updateConfigData();
+                    if (success || attempts > 20) {
+                        clearInterval(interval);
+                    }
+                }, 500);
             }
         } catch (error) {
             console.error('Error loading footer:', error);
