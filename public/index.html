@@ -155,6 +155,19 @@
         </div>
     </section>
 
+    <!-- Trending Products -->
+    <section id="trending-products-section" class="section" style="background-color: #fbf6e5;">
+        <div class="container">
+            <h3 class="text-center">🔥 Trending Now</h3>
+            <div id="trending-products" class="product-grid" style="margin-top: 30px;">
+                <p class="text-center">Loading...</p>
+            </div>
+            <div class="text-center" style="margin-top: 40px;">
+                <a href="shop.html" class="btn">View All</a>
+            </div>
+        </div>
+    </section>
+
     <!-- Brochures Section -->
     <section class="section" style="background-color: #fbfbfb;">
         <div class="container">
@@ -238,21 +251,14 @@
                 const container = document.getElementById('featured-products');
                 container.innerHTML = '';
 
-                // Filter featured products
-                // is_featured can be 1, true, "1", "true" depending on DB/API serialization
                 let featured = products.filter(p => p.is_featured == 1 || p.is_featured === true || p.is_featured === 'true');
 
                 let displayList = [];
 
                 if (featured.length > 4) {
-                    // Scenario A: More than 4 featured -> Show ALL featured
                     displayList = featured;
                 } else {
-                    // Scenario B: 4 or fewer featured -> Show at least 4 items
-                    // Start with featured ones
                     displayList = [...featured];
-
-                    // Fill remaining slots with non-featured products
                     const needed = 4 - displayList.length;
                     if (needed > 0) {
                         const others = products.filter(p => !displayList.includes(p));
@@ -260,7 +266,6 @@
                     }
                 }
 
-                // Render
                 displayList.forEach(p => {
                     const el = document.createElement('div');
                     el.className = 'product-card';
@@ -278,6 +283,47 @@
                 console.error('Error loading featured products:', e);
                 const container = document.getElementById('featured-products');
                 if (container) container.innerHTML = '<p class="text-center">Unable to load products. Please check connection.</p>';
+            }
+        }
+
+        async function loadTrending() {
+            try {
+                const products = await API.get('/products');
+                const container = document.getElementById('trending-products');
+                container.innerHTML = '';
+
+                let trending = products.filter(p => p.is_trending == 1 || p.is_trending === true || p.is_trending === 'true');
+
+                let displayList = [];
+
+                if (trending.length > 4) {
+                    displayList = trending;
+                } else {
+                    displayList = [...trending];
+                    const needed = 4 - displayList.length;
+                    if (needed > 0) {
+                        const others = products.filter(p => !displayList.includes(p));
+                        displayList = displayList.concat(others.slice(0, needed));
+                    }
+                }
+
+                displayList.forEach(p => {
+                    const el = document.createElement('div');
+                    el.className = 'product-card';
+                    el.innerHTML = `
+                        <img src="${p.image_url || 'https://via.placeholder.com/200'}" alt="${p.name}">
+                        <div class="card-info">
+                            <h4>${p.name}</h4>
+                            <p>${formatPrice(p.price)}</p>
+                            <a href="product.html?id=${p.id}" class="btn-outline">View</a>
+                        </div>
+                    `;
+                    container.appendChild(el);
+                });
+            } catch (e) {
+                console.error('Error loading trending products:', e);
+                const container = document.getElementById('trending-products');
+                if (container) container.innerHTML = '<p class="text-center">Unable to load trending products.</p>';
             }
         }
 
@@ -350,9 +396,13 @@
             try {
                 const settings = await API.get('/settings');
                 // Apply visibility - default to SHOWN
-                const trendingSec = document.getElementById('featured-products-section');
+                const featuredSec = document.getElementById('featured-products-section');
+                const trendingSec = document.getElementById('trending-products-section');
                 const instaSec = document.getElementById('styled-looks-section');
 
+                if (featuredSec) {
+                    featuredSec.style.display = (settings.show_featured === 'false') ? 'none' : '';
+                }
                 if (trendingSec) {
                     trendingSec.style.display = (settings.show_trending === 'false') ? 'none' : '';
                 }
@@ -362,8 +412,10 @@
             } catch (e) {
                 console.error('Settings load error', e);
                 // On error, ensure sections are visible (default)
-                const trendingSec = document.getElementById('featured-products-section');
+                const featuredSec = document.getElementById('featured-products-section');
+                const trendingSec = document.getElementById('trending-products-section');
                 const instaSec = document.getElementById('styled-looks-section');
+                if (featuredSec) featuredSec.style.display = '';
                 if (trendingSec) trendingSec.style.display = '';
                 if (instaSec) instaSec.style.display = '';
             }
@@ -443,6 +495,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             loadFeatured();
+            loadTrending();
             loadCollections();
             loadBrochures();
             loadFeaturedReviews();
