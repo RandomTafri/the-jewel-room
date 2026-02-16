@@ -102,6 +102,7 @@
                 const updateConfigData = () => {
                     // Use State.config if available, otherwise failover to hardcoded defaults
                     const config = (typeof State !== 'undefined' && State.config) ? State.config : {};
+                    console.log('Footer Config Update:', config);
 
                     const email = config.supportEmail || 'support@shreeroop.com';
                     const phone = config.supportPhone || '+91 8397803333';
@@ -109,11 +110,16 @@
                     const emailEl = document.getElementById('footer-email');
                     if (emailEl) {
                         emailEl.innerHTML = `<a href="mailto:${email}">${email}</a>`;
+                    } else {
+                        console.warn('Footer email element not found');
                     }
                     const phoneEl = document.getElementById('footer-phone');
                     if (phoneEl) {
                         phoneEl.textContent = phone;
+                    } else {
+                        console.warn('Footer phone element not found');
                     }
+
                     // Return true only if we actually found State.config (dynamic loading)
                     // If we used defaults, we might still want to retry just in case State loads later.
                     return Boolean(config.supportEmail);
