@@ -176,7 +176,7 @@
                     href="https://instagram.com/shree_roop_creative" target="_blank"
                     style="color: #d4af37;">@shree_roop_creative</a></p>
 
-            <div id="styled-looks-list" class="scrolling-wrapper">
+            <div id="styled-looks-list" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
                 <p class="text-center" style="width: 100%;">Loading looks...</p>
             </div>
         </div>
@@ -337,12 +337,10 @@
                 }
 
                 container.innerHTML = looks.map(look => `
-                    <div class="collection-item" style="flex: 0 0 200px;">
-                        <a href="${look.link || '#'}" target="_blank">
-                            <div style="width: 200px; height: 250px; overflow: hidden; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                                <img src="${look.image_url}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                            </div>
-                        </a>
+                    <div style="flex: 0 0 200px;">
+                        <div style="width: 200px; height: 250px; overflow: hidden; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                            <img src="${look.image_url}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; cursor: default;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        </div>
                     </div>
                 `).join('');
             } catch (e) { console.error(e); }
