@@ -54,7 +54,27 @@ router.post('/', isAdmin, upload.single('image'), async (req, res) => {
 
     let image_url = manualUrl || '';
 
-    // ... (Image upload logic remains unchanged)
+    if (req.file) {
+        if (!isR2Configured()) {
+            return res.status(400).json({
+                error: 'Image upload not available: R2 storage is not configured. Please use a manual image URL instead.'
+            });
+        }
+        try {
+            const uploadRes = await uploadBufferToR2({
+                buffer: req.file.buffer,
+                contentType: req.file.mimetype,
+                keyPrefix: 'products',
+                originalName: req.file.originalname
+            });
+            image_url = uploadRes.publicUrl;
+        } catch (uploadErr) {
+            console.error('R2 upload failed:', uploadErr);
+            return res.status(500).json({
+                error: 'Image upload failed. Please try using a manual image URL instead.'
+            });
+        }
+    }
 
     try {
         const params = [
@@ -84,11 +104,33 @@ router.post('/', isAdmin, upload.single('image'), async (req, res) => {
 // Admin: Update Product
 router.put('/:id', isAdmin, upload.single('image'), async (req, res) => {
     const { id } = req.params;
-    const { name, description, price, category, image_url, stock, is_active, is_featured } = req.body;
+    const { name, description, price, category, image_url: manualUrl, stock, is_active, is_featured } = req.body;
 
-    // ... (Logging logic remains unchanged)
+    logRequest('PUT /products/:id', 'UPDATE', { id }, req.body);
 
-    // ... (Image upload logic remains unchanged)
+    let nextImageUrl = manualUrl || null;
+
+    if (req.file) {
+        if (!isR2Configured()) {
+            return res.status(400).json({
+                error: 'Image upload not available: R2 storage is not configured. Please use a manual image URL instead.'
+            });
+        }
+        try {
+            const uploadRes = await uploadBufferToR2({
+                buffer: req.file.buffer,
+                contentType: req.file.mimetype,
+                keyPrefix: 'products',
+                originalName: req.file.originalname
+            });
+            nextImageUrl = uploadRes.publicUrl;
+        } catch (uploadErr) {
+            console.error('R2 upload failed:', uploadErr);
+            return res.status(500).json({
+                error: 'Image upload failed. Please try using a manual image URL instead.'
+            });
+        }
+    }
 
     try {
         const params = [
