@@ -44,7 +44,20 @@ router.get('/', async (req, res) => {
     }
 });
 
-// ... (GET /:id/image and GET /:id remain unchanged)
+// Get single product by ID
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await db.query('SELECT * FROM products WHERE id = ?', [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error('Error fetching product:', err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
 
 // Admin: Create Product
 router.post('/', isAdmin, upload.single('image'), async (req, res) => {
