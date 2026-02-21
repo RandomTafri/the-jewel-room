@@ -17,8 +17,7 @@ router.get('/', async (req, res) => {
         }
 
         let query = `
-            SELECT w.id as wishlist_id, p.*, 
-            (SELECT image_data FROM products WHERE id = p.id) as image_data 
+            SELECT w.id as wishlist_id, p.*
             FROM wishlist w
             JOIN products p ON w.product_id = p.id
             WHERE `;
@@ -26,10 +25,10 @@ router.get('/', async (req, res) => {
         const params = [];
 
         if (userId) {
-            query += `w.user_id = $1`;
+            query += `w.user_id = ?`;
             params.push(userId);
         } else {
-            query += `w.session_id = $1 AND w.user_id IS NULL`;
+            query += `w.session_id = ? AND w.user_id IS NULL`;
             params.push(sessionId);
         }
 
@@ -38,13 +37,7 @@ router.get('/', async (req, res) => {
         const result = await db.query(query, params);
 
         // Format image URLs
-        const items = result.rows.map(p => ({
-            ...p,
-            image_url: p.image_data ? `/api/products/${p.id}/image` : p.image_url,
-            image_data: undefined // Don't send raw bytes in list
-        }));
-
-        res.json(items);
+        res.json(result.rows);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Server error' });
@@ -63,14 +56,14 @@ router.post('/:productId', async (req, res) => {
         }
 
         // Check if exists
-        let checkQuery = 'SELECT id FROM wishlist WHERE product_id = $1 AND ';
+        let checkQuery = 'SELECT id FROM wishlist WHERE product_id = ? AND ';
         let checkParams = [productId];
 
         if (userId) {
-            checkQuery += 'user_id = $2';
+            checkQuery += 'user_id = ?';
             checkParams.push(userId);
         } else {
-            checkQuery += 'session_id = $2 AND user_id IS NULL';
+            checkQuery += 'session_id = ? AND user_id IS NULL';
             checkParams.push(sessionId);
         }
 
@@ -78,11 +71,11 @@ router.post('/:productId', async (req, res) => {
 
         if (checkRes.rows.length > 0) {
             // Exists -> Remove it (Unlike)
-            await db.query('DELETE FROM wishlist WHERE id = $1', [checkRes.rows[0].id]);
+            await db.query('DELETE FROM wishlist WHERE id = ?', [checkRes.rows[0].id]);
             return res.json({ liked: false, message: 'Removed from wishlist' });
         } else {
             // Not exist -> Add it (Like)
-            let insertQuery = 'INSERT INTO wishlist (product_id, user_id, session_id) VALUES ($1, $2, $3) RETURNING id';
+            let insertQuery = 'INSERT INTO wishlist (product_id, user_id, session_id) VALUES (?, ?, ?)';
             let insertParams = [productId, userId, userId ? null : sessionId]; // If user, session is null (or keep both? prefer strict ownership)
 
             // Note: If user logs in, we might want to migrate session likes. For now, strict separation.

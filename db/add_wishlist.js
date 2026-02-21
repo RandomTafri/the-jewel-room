@@ -1,35 +1,49 @@
-const { Pool } = require('pg');
-require('dotenv').config();
+const mysql = require('mysql2/promise');
+require('../server/utils/load-env').loadEnv();
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
-});
+function buildPoolConfig() {
+    if (process.env.MYSQL_URL) {
+        return process.env.MYSQL_URL;
+    }
 
-const schema = `
-CREATE TABLE IF NOT EXISTS wishlist (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    session_id VARCHAR(255),
-    product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Index for faster lookups
-CREATE INDEX IF NOT EXISTS idx_wishlist_user ON wishlist(user_id);
-CREATE INDEX IF NOT EXISTS idx_wishlist_session ON wishlist(session_id);
-`;
+    return {
+        host: process.env.MYSQL_HOST || 'localhost',
+        port: process.env.MYSQL_PORT ? Number(process.env.MYSQL_PORT) : 3306,
+        user: process.env.MYSQL_USER || 'root',
+        password: process.env.MYSQL_PASSWORD || '',
+        database: process.env.MYSQL_DATABASE || 'the_jewel_room'
+    };
+}
 
 async function addWishlist() {
-    const client = await pool.connect();
+    const pool = mysql.createPool(buildPoolConfig());
     try {
         console.log('Creating wishlist table...');
-        await client.query(schema);
+        await pool.execute(`
+            CREATE TABLE IF NOT EXISTS wishlist (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT,
+                session_id VARCHAR(255),
+                product_id INT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB
+        `);
+        try {
+            await pool.execute('CREATE INDEX idx_wishlist_user ON wishlist(user_id)');
+        } catch (err) {
+            if (err.code !== 'ER_DUP_KEYNAME') throw err;
+        }
+        try {
+            await pool.execute('CREATE INDEX idx_wishlist_session ON wishlist(session_id)');
+        } catch (err) {
+            if (err.code !== 'ER_DUP_KEYNAME') throw err;
+        }
         console.log('Wishlist table created successfully.');
     } catch (err) {
         console.error('Error creating wishlist table:', err);
     } finally {
-        client.release();
         await pool.end();
     }
 }

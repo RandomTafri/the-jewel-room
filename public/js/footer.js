@@ -100,31 +100,52 @@
 
                 // Update email and phone from config (Retry mechanism)
                 const updateConfigData = () => {
-                    if (State.config && State.config.supportEmail) {
-                        const emailEl = document.getElementById('footer-email');
-                        if (emailEl) {
-                            emailEl.innerHTML = `<a href="mailto:${State.config.supportEmail}">${State.config.supportEmail}</a>`;
-                        }
-                        const phoneEl = document.getElementById('footer-phone');
-                        if (phoneEl) {
-                            phoneEl.textContent = State.config.supportPhone || '+91 8397803333';
-                        }
-                        return true; // Success
+                    let config = {};
+                    if (typeof State !== 'undefined' && State.config) {
+                        config = State.config;
+                    } else if (window.State && window.State.config) {
+                        config = window.State.config;
                     }
-                    return false; // Keep retrying
+
+                    console.log('Footer Config Update:', config);
+
+                    const email = config.supportEmail || 'support@shreeroop.com';
+                    const phone = config.supportPhone || '+91 8397803333';
+
+                    const emailEl = document.getElementById('footer-email');
+                    if (emailEl) {
+                        // Only update if not already set to avoid flickering, or if we have real config
+                        if (emailEl.textContent === '...' || config.supportEmail) {
+                            emailEl.innerHTML = `<a href="mailto:${email}">${email}</a>`;
+                        }
+                    } else {
+                        console.warn('Footer email element not found');
+                    }
+
+                    const phoneEl = document.getElementById('footer-phone');
+                    if (phoneEl) {
+                        if (phoneEl.textContent === '...' || config.supportPhone) {
+                            phoneEl.textContent = phone;
+                        }
+                    } else {
+                        console.warn('Footer phone element not found');
+                    }
+
+                    return Boolean(config.supportEmail);
                 };
 
-                // Try immediately
-                if (!updateConfigData()) {
-                    // Retry every 500ms max 10 times
-                    let attempts = 0;
-                    const interval = setInterval(() => {
-                        attempts++;
-                        if (updateConfigData() || attempts > 10) {
-                            clearInterval(interval);
-                        }
-                    }, 500);
-                }
+                // Try immediately to set defaults
+                updateConfigData();
+
+                // Retry logic for dynamic config
+                let attempts = 0;
+                const interval = setInterval(() => {
+                    attempts++;
+                    const success = updateConfigData();
+                    if (success || attempts > 20) {
+                        clearInterval(interval);
+                    }
+                }, 500);
             }
         } catch (error) {
             console.error('Error loading footer:', error);

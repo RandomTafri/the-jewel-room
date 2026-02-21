@@ -1,7 +1,10 @@
 node_modules
 .env
+.env.local
 .DS_Store
 coverage
 dist
 build
 npm-debug.log
+public/startup-status.txt
+server/db/database.sqlite

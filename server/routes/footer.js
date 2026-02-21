@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { isAdmin, optionalAuth } = require('../middleware/auth');
+const { logRequest, logDbQuery, logError, logSuccess } = require('../utils/apiLogger');
 
 // Get all active footer links (public)
 router.get('/links', async (req, res) => {
@@ -39,11 +40,12 @@ router.post('/links', isAdmin, async (req, res) => {
         }
 
         const result = await db.query(
-            'INSERT INTO footer_links (title, url, display_order, is_active) VALUES ($1, $2, $3, $4) RETURNING *',
-            [title, url, display_order || 0, is_active !== false]
+            'INSERT INTO footer_links (title, url, display_order, is_active) VALUES (?, ?, ?, ?)',
+            [title, url, display_order ?? 0, is_active !== false]
         );
 
-        res.json(result.rows[0]);
+        const created = await db.query('SELECT * FROM footer_links WHERE id = ?', [result.rows.insertId]);
+        res.json(created.rows[0]);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Server error' });
@@ -56,16 +58,22 @@ router.put('/links/:id', isAdmin, async (req, res) => {
         const { id } = req.params;
         const { title, url, display_order, is_active } = req.body;
 
+        logRequest('PUT /footer/links/:id', 'UPDATE', { id }, req.body);
+
+        const params = [title ?? null, url ?? null, display_order ?? null, is_active ?? null, id];
+        logDbQuery('UPDATE footer_links', params);
+
         const result = await db.query(
-            'UPDATE footer_links SET title = $1, url = $2, display_order = $3, is_active = $4 WHERE id = $5 RETURNING *',
-            [title, url, display_order, is_active, id]
+            'UPDATE footer_links SET title = ?, url = ?, display_order = ?, is_active = ? WHERE id = ?',
+            params
         );
 
-        if (result.rows.length === 0) {
+        const updated = await db.query('SELECT * FROM footer_links WHERE id = ?', [id]);
+        if (updated.rows.length === 0) {
             return res.status(404).json({ error: 'Footer link not found' });
         }
 
-        res.json(result.rows[0]);
+        res.json(updated.rows[0]);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Server error' });
@@ -76,11 +84,11 @@ router.put('/links/:id', isAdmin, async (req, res) => {
 router.delete('/links/:id', isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await db.query('DELETE FROM footer_links WHERE id = $1 RETURNING *', [id]);
-
+        const result = await db.query('SELECT * FROM footer_links WHERE id = ?', [id]);
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Footer link not found' });
         }
+        await db.query('DELETE FROM footer_links WHERE id = ?', [id]);
 
         res.json({ message: 'Footer link deleted successfully' });
     } catch (err) {

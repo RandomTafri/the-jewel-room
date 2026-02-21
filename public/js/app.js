@@ -28,7 +28,11 @@ const API = {
         try {
             const res = await fetch(`${API_URL}${endpoint}`, options);
             const json = await res.json();
-            if (!res.ok) throw new Error(json.error || 'Request failed');
+            if (!res.ok) {
+                const error = new Error(json.error || 'Request failed');
+                error.status = res.status;
+                throw error;
+            }
             return json;
         } catch (err) {
             console.error(err);
@@ -67,8 +71,14 @@ const App = {
                 State.user = res.user;
                 this.updateAuthUI();
             } catch (e) {
-                // Token invalid
-                this.logout();
+                // Only logout if explicitly unauthorized. 
+                // Ignore network errors or 500s (keep local session until confirmed invalid)
+                if (e.status === 401 || e.status === 403) {
+                    alert(`Session Check Failed: ${e.status} - ${e.message}\nLogging out...`);
+                    this.logout();
+                } else {
+                    console.warn('Auth check failed (keeping session):', e);
+                }
             }
         } else {
             this.updateAuthUI();

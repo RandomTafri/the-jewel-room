@@ -1,14 +1,14 @@
 -- Create info_pages table for CMS
 CREATE TABLE IF NOT EXISTS info_pages (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     slug VARCHAR(100) UNIQUE NOT NULL,
     title VARCHAR(200) NOT NULL,
     content TEXT DEFAULT '',
     display_order INT DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
 
 -- Insert default INFO pages
 INSERT INTO info_pages (slug, title, content, display_order) VALUES
@@ -17,4 +17,4 @@ INSERT INTO info_pages (slug, title, content, display_order) VALUES
 ('privacy-policy', 'Privacy Policy', '<h2>Privacy Policy</h2><p>Your privacy is important to us. This policy outlines how we collect and use your information.</p>', 3),
 ('terms-conditions', 'Terms & Conditions', '<h2>Terms & Conditions</h2><p>Please read these terms carefully before using our services.</p>', 4),
 ('shipping-returns', 'Shipping & Returns', '<h2>Shipping & Returns</h2><p>Information about our shipping policy and return process.</p>', 5)
-ON CONFLICT (slug) DO NOTHING;
+ON DUPLICATE KEY UPDATE slug = slug;

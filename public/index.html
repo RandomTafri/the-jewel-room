@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shree Roop Creative | Exclusive Jewelry</title>
     <link rel="icon" type="image/png" href="images/logo.png">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=3.0">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700&display=swap"
         rel="stylesheet">
@@ -109,7 +109,7 @@
                 style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.5);">
         </div>
         <div class="container">
-            <h2 style="font-size: 3.5rem; margin-bottom: 20px;">Elegance is Eternal</h2>
+            <h2 style="font-size: 3.5rem; margin-bottom: 20px; color: #d4af37 !important;">Elegance is Eternal</h2>
             <p style="margin-bottom: 30px; font-size: 1.5rem;">Discover our exclusive collection of artificial jewelry.
             </p>
             <a href="shop.html" class="btn">Shop Now</a>
@@ -143,7 +143,7 @@
     </section>
 
     <!-- Featured Products -->
-    <section class="section">
+    <section id="featured-products-section" class="section">
         <div class="container">
             <h3 class="text-center">Featured Products</h3>
             <div id="featured-products" class="product-grid" style="margin-top: 30px;">
@@ -151,6 +151,19 @@
             </div>
             <div class="text-center" style="margin-top: 40px;">
                 <a href="shop.html" class="btn">More Products</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trending Products -->
+    <section id="trending-products-section" class="section" style="background-color: #fbf6e5;">
+        <div class="container">
+            <h3 class="text-center">🔥 Trending Now</h3>
+            <div id="trending-products" class="product-grid" style="margin-top: 30px;">
+                <p class="text-center">Loading...</p>
+            </div>
+            <div class="text-center" style="margin-top: 40px;">
+                <a href="shop.html" class="btn">View All</a>
             </div>
         </div>
     </section>
@@ -168,33 +181,63 @@
         </div>
     </section>
 
+    <!-- Styled Looks (Instagram) -->
+    <section id="styled-looks-section" class="section" style="background-color: #fff;">
+        <div class="container">
+            <h3 class="text-center" style="font-family: 'Cinzel', serif; letter-spacing: 2px;">Styled Looks</h3>
+            <p class="text-center" style="color: #666; margin-bottom: 30px;">Follow us <a
+                    href="https://instagram.com/shree_roop_creative" target="_blank"
+                    style="color: #d4af37;">@shree_roop_creative</a></p>
+
+            <div id="styled-looks-list" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
+                <p class="text-center" style="width: 100%;">Loading looks...</p>
+            </div>
+        </div>
+    </section>
+
     <!-- Reviews -->
     <section class="section" style="background-color: var(--secondary-color);">
         <div class="container text-center">
             <h3>Customer Reviews</h3>
-            <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin-top: 40px;">
-                <div style="background: white; padding: 20px; border-radius: 5px;">
-                    <p style="font-style: italic;">"Absolutely stunning designs! I wore the Kundan set for a wedding and
-                        got so many compliments."</p>
-                    <h5 style="margin-top: 15px;">- Priya S.</h5>
-                </div>
-                <div style="background: white; padding: 20px; border-radius: 5px;">
-                    <p style="font-style: italic;">"Great quality and fast delivery. The packing was also very secure.
-                        Will order again!"</p>
-                    <h5 style="margin-top: 15px;">- Anjali M.</h5>
-                </div>
-                <div style="background: white; padding: 20px; border-radius: 5px;">
-                    <p style="font-style: italic;">"Loved the earrings. They look just like real gold. Highly
-                        recommended."</p>
-                    <h5 style="margin-top: 15px;">- Sneha R.</h5>
-                </div>
+            <div id="home-reviews-list" class="grid"
+                style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin-top: 40px;">
+                <p class="text-center">Loading reviews...</p>
             </div>
             <div style="margin-top: 30px;">
-                <a href="https://maps.google.com" target="_blank" class="btn-outline"
-                    style="border-color: #333; color: #333;">Read More on Google</a>
+                <button class="btn-outline" style="border-color: #333; color: #333;" onclick="openReviewModal()">
+                    Review Us
+                </button>
             </div>
         </div>
     </section>
+
+    <!-- Review Modal -->
+    <div id="review-modal" class="modal-overlay hidden" onclick="closeReviewModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-20">
+                <h3 style="margin: 0;">Write a Review</h3>
+                <button onclick="closeReviewModal()"
+                    style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <form onsubmit="submitReview(event)" style="display: grid; gap: 12px;">
+                <input type="text" id="review-author" placeholder="Your Name" required maxlength="255">
+                <select id="review-rating">
+                    <option value="">Rating (optional)</option>
+                    <option value="5">5 - Excellent</option>
+                    <option value="4">4 - Good</option>
+                    <option value="3">3 - Okay</option>
+                    <option value="2">2 - Not great</option>
+                    <option value="1">1 - Bad</option>
+                </select>
+                <textarea id="review-content" placeholder="Write your review..." rows="4" required
+                    maxlength="2000"></textarea>
+                <p style="font-size: 0.85rem; color: #666; margin: 0;">
+                    Reviews are shown after admin approval.
+                </p>
+                <button type="submit" class="btn">Submit Review</button>
+            </form>
+        </div>
+    </div>
 
     <footer id="site-footer"></footer>
 
@@ -208,7 +251,22 @@
                 const container = document.getElementById('featured-products');
                 container.innerHTML = '';
 
-                products.slice(0, 4).forEach(p => {
+                let featured = products.filter(p => p.is_featured == 1 || p.is_featured === true || p.is_featured === 'true');
+
+                let displayList = [];
+
+                if (featured.length > 4) {
+                    displayList = featured;
+                } else {
+                    displayList = [...featured];
+                    const needed = 4 - displayList.length;
+                    if (needed > 0) {
+                        const others = products.filter(p => !displayList.includes(p));
+                        displayList = displayList.concat(others.slice(0, needed));
+                    }
+                }
+
+                displayList.forEach(p => {
                     const el = document.createElement('div');
                     el.className = 'product-card';
                     el.innerHTML = `
@@ -222,7 +280,50 @@
                     container.appendChild(el);
                 });
             } catch (e) {
-                console.error(e);
+                console.error('Error loading featured products:', e);
+                const container = document.getElementById('featured-products');
+                if (container) container.innerHTML = '<p class="text-center">Unable to load products. Please check connection.</p>';
+            }
+        }
+
+        async function loadTrending() {
+            try {
+                const products = await API.get('/products');
+                const container = document.getElementById('trending-products');
+                container.innerHTML = '';
+
+                let trending = products.filter(p => p.is_trending == 1 || p.is_trending === true || p.is_trending === 'true');
+
+                let displayList = [];
+
+                if (trending.length > 4) {
+                    displayList = trending;
+                } else {
+                    displayList = [...trending];
+                    const needed = 4 - displayList.length;
+                    if (needed > 0) {
+                        const others = products.filter(p => !displayList.includes(p));
+                        displayList = displayList.concat(others.slice(0, needed));
+                    }
+                }
+
+                displayList.forEach(p => {
+                    const el = document.createElement('div');
+                    el.className = 'product-card';
+                    el.innerHTML = `
+                        <img src="${p.image_url || 'https://via.placeholder.com/200'}" alt="${p.name}">
+                        <div class="card-info">
+                            <h4>${p.name}</h4>
+                            <p>${formatPrice(p.price)}</p>
+                            <a href="product.html?id=${p.id}" class="btn-outline">View</a>
+                        </div>
+                    `;
+                    container.appendChild(el);
+                });
+            } catch (e) {
+                console.error('Error loading trending products:', e);
+                const container = document.getElementById('trending-products');
+                if (container) container.innerHTML = '<p class="text-center">Unable to load trending products.</p>';
             }
         }
 
@@ -271,15 +372,135 @@
             } catch (e) { console.error(e); }
         }
 
+        async function loadStyledLooks() {
+            try {
+                const looks = await API.get('/instagram');
+                const container = document.getElementById('styled-looks-list');
+
+                if (looks.length === 0) {
+                    container.innerHTML = '<p class="text-center" style="width:100%">Follow our Instagram for latest updates!</p>';
+                    return;
+                }
+
+                container.innerHTML = looks.map(look => `
+                    <div style="flex: 0 0 200px;">
+                        <div style="width: 200px; height: 250px; overflow: hidden; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                            <img src="${look.image_url}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; cursor: default;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadSettings() {
+            try {
+                const settings = await API.get('/settings');
+                // Apply visibility - default to SHOWN
+                const featuredSec = document.getElementById('featured-products-section');
+                const trendingSec = document.getElementById('trending-products-section');
+                const instaSec = document.getElementById('styled-looks-section');
+
+                if (featuredSec) {
+                    featuredSec.style.display = (settings.show_featured === 'false') ? 'none' : '';
+                }
+                if (trendingSec) {
+                    trendingSec.style.display = (settings.show_trending === 'false') ? 'none' : '';
+                }
+                if (instaSec) {
+                    instaSec.style.display = (settings.show_instagram === 'false') ? 'none' : '';
+                }
+            } catch (e) {
+                console.error('Settings load error', e);
+                // On error, ensure sections are visible (default)
+                const featuredSec = document.getElementById('featured-products-section');
+                const trendingSec = document.getElementById('trending-products-section');
+                const instaSec = document.getElementById('styled-looks-section');
+                if (featuredSec) featuredSec.style.display = '';
+                if (trendingSec) trendingSec.style.display = '';
+                if (instaSec) instaSec.style.display = '';
+            }
+        }
+
         function openWhatsAppContact() {
             const url = `https://wa.me/${State.config.whatsappNumber}?text=${encodeURIComponent("Hi, I would like to know more about your products.")}`;
             window.open(url, '_blank');
         }
 
+        function renderReviewCard(container, review) {
+            const card = document.createElement('div');
+            card.className = 'review-card';
+
+            const contentEl = document.createElement('p');
+            contentEl.textContent = `"${review.content}"`;
+
+            const nameEl = document.createElement('h5');
+            nameEl.textContent = `- ${review.author_name}`;
+
+            card.appendChild(contentEl);
+            card.appendChild(nameEl);
+            container.appendChild(card);
+        }
+
+        async function loadFeaturedReviews() {
+            const container = document.getElementById('home-reviews-list');
+            if (!container) return;
+
+            try {
+                const res = await API.get('/reviews/featured');
+                const reviews = (res && res.reviews) || [];
+                container.innerHTML = '';
+
+                if (reviews.length === 0) {
+                    container.innerHTML = '<p class="text-center">No reviews yet. Be the first to leave one!</p>';
+                    return;
+                }
+
+                reviews.slice(0, 3).forEach(r => renderReviewCard(container, r));
+            } catch (e) {
+                container.innerHTML = '<p class="text-center">Unable to load reviews.</p>';
+            }
+        }
+
+        function openReviewModal() {
+            const el = document.getElementById('review-modal');
+            if (el) el.classList.remove('hidden');
+        }
+
+        function closeReviewModal() {
+            const el = document.getElementById('review-modal');
+            if (!el) return;
+            el.classList.add('hidden');
+        }
+
+        async function submitReview(e) {
+            e.preventDefault();
+
+            const authorName = document.getElementById('review-author').value;
+            const ratingVal = document.getElementById('review-rating').value;
+            const content = document.getElementById('review-content').value;
+
+            const rating = ratingVal ? Number(ratingVal) : null;
+
+            try {
+                await API.post('/reviews', { authorName, rating, content });
+                closeReviewModal();
+                alert('Thanks! Your review was submitted for approval.');
+                document.getElementById('review-author').value = '';
+                document.getElementById('review-rating').value = '';
+                document.getElementById('review-content').value = '';
+            } catch (err) {
+                alert(err && err.message ? err.message : 'Failed to submit review');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadFeatured();
+            loadTrending();
             loadCollections();
             loadBrochures();
+            loadFeaturedReviews();
+            loadStyledLooks();
+            loadSettings();
             setTimeout(() => {
                 const emailEl = document.getElementById('contact-email');
                 if (emailEl && State.config) {
@@ -288,7 +509,7 @@
             }, 500);
         });
     </script>
-<script src="js/mobile-header.js"></script>
+    <script src="js/mobile-header.js"></script>
 </body>
 
 </html>

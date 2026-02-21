@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const { authenticateToken, isAdmin } = require('../middleware/auth');
 const Razorpay = require('razorpay');
+const { logRequest, logDbQuery, logError, logSuccess } = require('../utils/apiLogger');
 require('dotenv').config();
 
 //const razorpay = new Razorpay({
@@ -14,9 +15,9 @@ const key_id = process.env.RAZORPAY_KEY_ID;
 const key_secret = process.env.RAZORPAY_KEY_SECRET;
 
 const razorpay =
-  key_id && key_secret
-    ? new Razorpay({ key_id, key_secret })
-    : null;
+    key_id && key_secret
+        ? new Razorpay({ key_id, key_secret })
+        : null;
 
 // In routes: if (!razorpay) return 503 with message "Razorpay not configured"
 
@@ -28,32 +29,43 @@ router.post('/', authenticateToken, async (req, res) => {
         customerPhone,
         items, // Passed from frontend or we fetch from DB cart. Fetching from DB is safer.
         paymentMethod, // 'COD' or 'ONLINE'
-        totalAmount // Simplified: Frontend calculates, Backend verifies ideally.
+        totalAmount, // Simplified: Frontend calculates, Backend verifies ideally.
+        couponCode
     } = req.body;
 
     // In a real app, perform calculation verification here using `items` IDs.
     // For this template, we assume `items` contains { product_id, quantity, price } and we sum it up.
 
     try {
+        if (paymentMethod === 'ONLINE' && !razorpay) {
+            return res.status(503).json({ error: 'Razorpay not configured' });
+        }
         // 1. Create Order in DB
-        const result = await db.query(
+        const params = [
+            req.user.id,
+            customerName ?? null,
+            req.user.email ?? null,
+            customerPhone ?? null,
+            shippingAddress ?? null,
+            totalAmount ?? null,
+            paymentMethod ?? null,
+            JSON.stringify(items),
+            paymentMethod === 'COD' ? 'PENDING' : 'PENDING',
+            couponCode ?? null
+        ];
+
+        logRequest('POST /orders', 'CREATE', {}, { customerName, paymentMethod, totalAmount });
+        logDbQuery('INSERT INTO orders', params);
+
+        const insert = await db.query(
             `INSERT INTO orders 
-            (user_id, customer_name, customer_email, customer_phone, shipping_address, total_amount, payment_method, items_snapshot, payment_status)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-            [
-                req.user.id,
-                customerName,
-                req.user.email, // Assuming email from token 
-                customerPhone,
-                shippingAddress,
-                totalAmount,
-                paymentMethod,
-                JSON.stringify(items),
-                paymentMethod === 'COD' ? 'PENDING' : 'PENDING'
-            ]
+            (user_id, customer_name, customer_email, customer_phone, shipping_address, total_amount, payment_method, items_snapshot, payment_status, coupon_code)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            params
         );
 
-        const order = result.rows[0];
+        const orderResult = await db.query('SELECT * FROM orders WHERE id = ?', [insert.rows.insertId]);
+        const order = orderResult.rows[0];
 
         // 2. If Online, create Razorpay Order
         let razorpayOrder = null;
@@ -66,11 +78,11 @@ router.post('/', authenticateToken, async (req, res) => {
             razorpayOrder = await razorpay.orders.create(options);
 
             // Update DB with razorpay order id
-            await db.query('UPDATE orders SET razorpay_order_id = $1 WHERE id = $2', [razorpayOrder.id, order.id]);
+            await db.query('UPDATE orders SET razorpay_order_id = ? WHERE id = ?', [razorpayOrder.id, order.id]);
         }
 
         // 3. Clear Cart (assume user has one cart)
-        await db.query('DELETE FROM cart_items WHERE cart_id = (SELECT id FROM carts WHERE user_id = $1)', [req.user.id]);
+        await db.query('DELETE FROM cart_items WHERE cart_id = (SELECT id FROM carts WHERE user_id = ?)', [req.user.id]);
 
         res.json({
             orderId: order.id,
@@ -79,7 +91,7 @@ router.post('/', authenticateToken, async (req, res) => {
         });
 
     } catch (err) {
-        console.error(err);
+        logError('POST /orders', err, { customerName, paymentMethod, totalAmount });
         res.status(500).json({ error: 'Order Creation Failed' });
     }
 });
@@ -96,7 +108,7 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
     if (generated_signature === razorpay_signature) {
         // Success
         await db.query(
-            "UPDATE orders SET payment_status = 'PAID', razorpay_payment_id = $1 WHERE id = $2",
+            "UPDATE orders SET payment_status = 'PAID', razorpay_payment_id = ? WHERE id = ?",
             [razorpay_payment_id, orderId]
         );
         res.json({ status: 'success' });
@@ -108,7 +120,7 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
 // Get User Orders
 router.get('/my-orders', authenticateToken, async (req, res) => {
     try {
-        const result = await db.query('SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
+        const result = await db.query('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC', [req.user.id]);
         res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: 'Error fetching orders' });

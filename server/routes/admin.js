@@ -18,7 +18,19 @@ router.put('/orders/:id/status', isAdmin, async (req, res) => {
     const { status } = req.body;
     const { id } = req.params;
     try {
-        await db.query('UPDATE orders SET order_status = $1 WHERE id = $2', [status, id]);
+        await db.query('UPDATE orders SET order_status = ? WHERE id = ?', [status, id]);
+        res.json({ message: 'Updated' });
+    } catch (err) {
+        res.status(500).json({ error: 'Error' });
+    }
+});
+
+// Update Payment Status
+router.put('/orders/:id/payment-status', isAdmin, async (req, res) => {
+    const { payment_status } = req.body;
+    const { id } = req.params;
+    try {
+        await db.query('UPDATE orders SET payment_status = ? WHERE id = ?', [payment_status, id]);
         res.json({ message: 'Updated' });
     } catch (err) {
         res.status(500).json({ error: 'Error' });
@@ -30,7 +42,7 @@ router.get('/orders/:id', isAdmin, async (req, res) => {
     const { id } = req.params;
     try {
         // Get order
-        const orderResult = await db.query('SELECT * FROM orders WHERE id = $1', [id]);
+        const orderResult = await db.query('SELECT * FROM orders WHERE id = ?', [id]);
         if (orderResult.rows.length === 0) {
             return res.status(404).json({ error: 'Order not found' });
         }

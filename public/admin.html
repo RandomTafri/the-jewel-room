@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Shree Roop Creative</title>
     <link rel="icon" type="image/png" href="images/logo.png">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=3.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
@@ -19,7 +19,15 @@
             <h2 style="margin-bottom: 30px;">Admin Access</h2>
             <form onsubmit="adminLogin(event)" style="display: grid; gap: 20px;">
                 <input type="email" name="email" placeholder="Email Address" required>
-                <input type="password" name="password" placeholder="Password" required>
+                <div style="position: relative;">
+                    <input type="password" id="admin-password" name="password" placeholder="Password" required
+                        style="padding-right: 40px; width: 100%;">
+                    <button type="button" onclick="togglePasswordVisibility()"
+                        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666; font-size: 1.1rem;"
+                        aria-label="Toggle password visibility">
+                        <i class="fa-solid fa-eye" id="admin-password-icon"></i>
+                    </button>
+                </div>
                 <button class="btn" style="width: 100%;">Sign In</button>
             </form>
             <p style="margin-top: 20px; font-size: 0.9rem;"><a href="index.html"
@@ -30,14 +38,38 @@
     <!-- Admin Dashboard Panel -->
     <div id="admin-panel" class="admin-layout hidden">
         <!-- Sidebar -->
-        <aside class="sidebar" id="admin-sidebar">
-            <h2 class="flex justify-between items-center">
+        <aside class="sidebar" id="admin-sidebar"
+            style="background-color: #d4af37 !important; color: #1a1a1a !important;">
+            <h2 class="flex justify-between items-center"
+                style="color: #1a1a1a !important; border-bottom-color: rgba(0,0,0,0.1);">
                 Shree Roop Creative
                 <button onclick="toggleAdminSidebar()" class="mobile-only"
-                    style="background:none; border:none; color:white; font-size:1.2rem;"><i
+                    style="background:none; border:none; color:#1a1a1a; font-size:1.2rem;"><i
                         class="fa-solid fa-xmark"></i></button>
             </h2>
-            <nav>
+            <nav id="admin-nav">
+                <style>
+                    /* Inline override for admin sidebar buttons to ensure visibility on Gold */
+                    #admin-nav button {
+                        color: rgba(0, 0, 0, 0.7) !important;
+                    }
+
+                    #admin-nav button:hover,
+                    #admin-nav button.active {
+                        color: #000 !important;
+                        background-color: rgba(255, 255, 255, 0.4) !important;
+                    }
+
+                    /* Force all .btn buttons to have black text */
+                    .btn,
+                    .btn:hover,
+                    .btn:focus,
+                    .btn:active,
+                    button.btn,
+                    a.btn {
+                        color: #000 !important;
+                    }
+                </style>
                 <button onclick="switchTab('orders')" id="btn-orders" class="active"><i class="fa-solid fa-box"></i>
                     &nbsp; Orders</button>
                 <button onclick="switchTab('products')" id="btn-products"><i class="fa-solid fa-gem"></i> &nbsp;
@@ -46,8 +78,17 @@
                     Categories</button>
                 <button onclick="switchTab('brochures')" id="btn-brochures"><i class="fa-solid fa-file-pdf"></i> &nbsp;
                     Brochures</button>
+                <button onclick="switchTab('discounts')" id="btn-discounts"><i class="fa-solid fa-tags"></i> &nbsp;
+                    Coupons</button>
                 <button onclick="switchTab('footer')" id="btn-footer"><i class="fa-solid fa-link"></i> &nbsp;
                     Footer Links</button>
+                <button onclick="switchTab('instagram')" id="btn-instagram"><i class="fa-brands fa-instagram"></i>
+                    &nbsp;
+                    Styled Looks</button>
+                <button onclick="switchTab('reviews')" id="btn-reviews"><i class="fa-solid fa-star"></i> &nbsp;
+                    Reviews</button>
+                <button onclick="switchTab('settings')" id="btn-settings"><i class="fa-solid fa-cog"></i> &nbsp;
+                    Settings</button>
             </nav>
             <div style="margin-top: auto;">
                 <a href="index.html"
@@ -109,6 +150,19 @@
                     style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"></div>
             </div>
 
+            <!-- Coupons / Discounts View -->
+            <div id="tab-discounts" class="tab-content hidden">
+                <div class="admin-header">
+                    <div>
+                        <h3>Discount Coupons</h3>
+                        <p style="margin-top: 10px; color: #666;">Create and manage promo codes for your store.</p>
+                    </div>
+                    <button onclick="showDiscountModal()" class="btn"><i class="fa-solid fa-plus"></i> Add
+                        Coupon</button>
+                </div>
+                <div id="admin-discounts-list"></div>
+            </div>
+
             <!-- Footer Links View -->
             <div id="tab-footer" class="tab-content hidden">
                 <div class="admin-header">
@@ -119,6 +173,75 @@
                     <!-- Pages will be loaded here -->
                 </div>
             </div>
+
+            <!-- Styled Looks View -->
+            <div id="tab-instagram" class="tab-content hidden">
+                <div class="admin-header">
+                    <h3>Styled Looks (Instagram)</h3>
+                    <button onclick="showInstagramModal()" class="btn"><i class="fa-solid fa-plus"></i> Add
+                        Look</button>
+                </div>
+                <div id="admin-instagram-list" class="grid"
+                    style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px;">
+                </div>
+            </div>
+
+            <!-- Reviews View -->
+            <div id="tab-reviews" class="tab-content hidden">
+                <div class="admin-header">
+                    <div>
+                        <h3>Customer Reviews</h3>
+                        <p style="margin-top: 10px; color: #666;">Approve reviews and choose exactly 3 to show on the
+                            homepage.</p>
+                    </div>
+                    <div class="flex" style="gap: 10px;">
+                        <button onclick="loadAdminReviews()" class="btn-outline"><i class="fa-solid fa-rotate"></i>
+                            Refresh</button>
+                        <button onclick="saveFeaturedReviews()" class="btn"><i class="fa-solid fa-check"></i>
+                            Save Featured (3)</button>
+                    </div>
+                </div>
+                <div style="margin: 10px 0; color: #666; font-size: 0.9rem;">
+                    Selected for homepage: <span id="featured-count">0</span>/3
+                </div>
+                <div id="admin-reviews-list"></div>
+            </div>
+
+            <!-- Settings View -->
+            <div id="tab-settings" class="tab-content hidden">
+                <div class="admin-header">
+                    <h3>Global Settings</h3>
+                    <button onclick="saveAdminSettings()" class="btn"><i class="fa-solid fa-save"></i> Save
+                        Changes</button>
+                </div>
+                <div
+                    style="background: white; padding: 30px; border-radius: var(--radius); box-shadow: var(--shadow-sm); max-width: 600px;">
+                    <h4 style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">Homepage
+                        Display</h4>
+
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                        <div>
+                            <strong>Trending Products</strong>
+                            <p style="font-size: 0.9rem; color: #666;">Show/Hide the "Featured Products" section</p>
+                        </div>
+                        <label class="switch" style="font-size: 1.2rem;">
+                            <input type="checkbox" id="setting-trending" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <strong>Styled Looks (Instagram)</strong>
+                            <p style="font-size: 0.9rem; color: #666;">Show/Hide the "Styled Looks" section</p>
+                        </div>
+                        <label class="switch" style="font-size: 1.2rem;">
+                            <input type="checkbox" id="setting-instagram" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
 
         </main>
     </div>
@@ -170,6 +293,16 @@
                 <select id="p-cat" required>
                     <option value="">Select Category</option>
                 </select>
+                <div class="flex" style="gap: 15px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="p-featured" style="width: 20px; height: 20px;">
+                        <span style="font-size: 0.9rem;">Show in Featured Section</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="p-trending" style="width: 20px; height: 20px;">
+                        <span style="font-size: 0.9rem;">Show in Trending Section</span>
+                    </label>
+                </div>
                 <div>
                     <label style="font-size: 0.85rem; color: #666; margin-bottom: 5px; display: block;">Product
                         Image</label>
@@ -184,6 +317,7 @@
 
     <!-- Category Modal -->
     <div id="category-modal" class="modal-overlay hidden">
+
         <div class="modal">
             <div class="flex justify-between items-center mb-20">
                 <h3 id="cat-modal-title" style="margin: 0;">Add Category</h3>
@@ -202,6 +336,8 @@
                     <label style="font-size: 0.85rem; color: #666; margin-bottom: 5px; display: block;">Cover
                         Image</label>
                     <input type="file" id="cat-file" accept="image/*">
+                    <p style="text-align: center; margin: 5px 0;">- OR -</p>
+                    <input type="text" id="cat-img" placeholder="Image URL (Manual)">
                     <p style="font-size: 0.8rem; color: #666; margin-top: 6px;">Leave blank to keep the current image.
                     </p>
                 </div>
@@ -225,9 +361,96 @@
                 <div>
                     <label style="font-size: 0.85rem; color: #666; margin-bottom: 5px; display: block;">Thumbnail
                         Image</label>
-                    <input type="file" id="b-file" required accept="image/*">
+                    <input type="file" id="b-file" accept="image/*">
+                    <p style="text-align: center; margin: 5px 0;">- OR -</p>
+                    <input type="text" id="b-img" placeholder="Thumbnail URL (Manual)">
                 </div>
                 <button type="submit" class="btn">Add Brochure</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Instagram Modal -->
+    <div id="instagram-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="flex justify-between items-center mb-20">
+                <h3 style="margin: 0;">Add Trending Look</h3>
+                <button onclick="closeModal('instagram-modal')"
+                    style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <form onsubmit="saveInstagram(event)" style="display: grid; gap: 15px;">
+                <div>
+                    <label style="font-size: 0.85rem; color: #666; margin-bottom: 5px; display: block;">Image</label>
+                    <input type="file" id="insta-file" accept="image/*">
+                    <p style="text-align: center; margin: 5px 0;">- OR -</p>
+                    <input type="text" id="insta-img" placeholder="Image URL (Manual)">
+                </div>
+                <input type="text" id="insta-link" placeholder="Link (Optional)" class="input-field"
+                    style="padding: 10px; border: 1px solid #ddd;">
+                <button type="submit" class="btn">Add Look</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Discount Coupon Modal -->
+    <div id="discount-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="flex justify-between items-center mb-20">
+                <h3 id="discount-modal-title" style="margin: 0;">Add Coupon</h3>
+                <button onclick="closeModal('discount-modal')"
+                    style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <form onsubmit="saveDiscount(event)" style="display: grid; gap: 15px;">
+                <input type="hidden" id="d-id">
+
+                <label style="font-size: 0.85rem; font-weight: bold; margin-bottom: -10px;">Coupon Code</label>
+                <input type="text" id="d-code" placeholder="e.g. SUMMER10, WELCOME500"
+                    style="text-transform: uppercase;" required>
+
+                <div class="flex" style="gap: 15px;">
+                    <div style="flex: 1;">
+                        <label
+                            style="font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; display: block;">Discount
+                            Type</label>
+                        <select id="d-type" required>
+                            <option value="PERCENTAGE">Percentage (%)</option>
+                            <option value="FIXED">Fixed Amount (₹)</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label
+                            style="font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; display: block;">Discount
+                            Value</label>
+                        <input type="number" id="d-value" placeholder="e.g. 10 or 500" step="0.01" min="0" required>
+                    </div>
+                </div>
+
+                <label style="font-size: 0.85rem; font-weight: bold; margin-bottom: -10px;">Minimum Order Value
+                    (₹)</label>
+                <input type="number" id="d-min-order" placeholder="e.g. 1000 (Optional)" step="0.01" min="0">
+                <p style="font-size: 0.8rem; color: #666; margin-top: -10px;">Leave 0 or empty for no minimum order
+                    requirement.</p>
+
+                <div class="flex" style="gap: 15px; margin-top: 5px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; display: block;">Usage
+                            Limit Per User</label>
+                        <input type="number" id="d-usage-limit" placeholder="e.g. 1" min="1">
+                        <p style="font-size: 0.75rem; color: #666; margin-top: 2px;">Leave empty for unlimited</p>
+                    </div>
+                </div>
+
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 10px;">
+                    <input type="checkbox" id="d-first-order" style="width: 20px; height: 20px;">
+                    <span style="font-weight: bold; color: var(--primary-color);">Valid for First Order Only?</span>
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 10px;">
+                    <input type="checkbox" id="d-active" style="width: 20px; height: 20px;" checked>
+                    <span style="font-weight: bold;">Is Coupon Active?</span>
+                </label>
+
+                <button type="submit" class="btn" style="margin-top: 15px;">Save Coupon</button>
             </form>
         </div>
     </div>
@@ -255,6 +478,21 @@
                 initAdmin();
             } catch (err) {
                 alert('Invalid Credentials');
+            }
+        }
+
+        function togglePasswordVisibility() {
+            const input = document.getElementById('admin-password');
+            const icon = document.getElementById('admin-password-icon');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
             }
         }
 
@@ -287,7 +525,34 @@
             if (tab === 'products') { loadAdminProducts(); loadCategoryDropdown(); }
             if (tab === 'categories') loadAdminCategories();
             if (tab === 'brochures') loadAdminBrochures();
+            if (tab === 'discounts') loadAdminDiscounts();
             if (tab === 'footer') loadInfoPages();
+            if (tab === 'instagram') loadAdminInstagram();
+            if (tab === 'reviews') loadAdminReviews();
+            if (tab === 'settings') loadAdminSettings();
+        }
+
+        async function loadAdminSettings() {
+            try {
+                const settings = await API.get('/settings');
+                // Default checks if not present
+                document.getElementById('setting-trending').checked = settings.show_trending !== 'false';
+                document.getElementById('setting-instagram').checked = settings.show_instagram !== 'false';
+            } catch (e) { console.error(e); }
+        }
+
+        async function saveAdminSettings() {
+            const data = {
+                show_trending: document.getElementById('setting-trending').checked,
+                show_instagram: document.getElementById('setting-instagram').checked
+            };
+
+            try {
+                await API.put('/settings', data);
+                alert('Settings saved! Refresh the homepage to see changes.');
+            } catch (e) {
+                alert('Failed to save settings');
+            }
         }
 
         // --- Modals ---
@@ -305,9 +570,14 @@
                 document.getElementById('p-stock').value = product.stock;
                 document.getElementById('p-cat').value = product.category;
                 document.getElementById('p-img').value = product.image_url;
+                // Handle various truthy values for checked state
+                document.getElementById('p-featured').checked = (product.is_featured == 1 || product.is_featured === 'true' || product.is_featured === true);
+                document.getElementById('p-trending').checked = (product.is_trending == 1 || product.is_trending === 'true' || product.is_trending === true);
             } else {
                 document.getElementById('p-modal-title').innerText = 'Add Product';
                 document.getElementById('p-id').value = '';
+                document.getElementById('p-featured').checked = false;
+                document.getElementById('p-trending').checked = false;
             }
         }
 
@@ -343,14 +613,40 @@
             document.querySelector('#brochure-modal form').reset();
         }
 
+        function showDiscountModal(discount = null) {
+            document.getElementById('discount-modal').classList.remove('hidden');
+            const form = document.querySelector('#discount-modal form');
+            form.reset();
+
+            if (discount) {
+                document.getElementById('discount-modal-title').innerText = 'Edit Coupon';
+                document.getElementById('d-id').value = discount.id;
+                document.getElementById('d-code').value = discount.code;
+                document.getElementById('d-type').value = discount.type;
+                document.getElementById('d-value').value = discount.value;
+                document.getElementById('d-min-order').value = discount.min_order_value || '';
+                document.getElementById('d-usage-limit').value = discount.usage_limit_per_user || '';
+                document.getElementById('d-first-order').checked = (discount.first_order_only == 1 || discount.first_order_only === true);
+                document.getElementById('d-active').checked = (discount.is_active == 1 || discount.is_active === true);
+            } else {
+                document.getElementById('discount-modal-title').innerText = 'Add Coupon';
+                document.getElementById('d-id').value = '';
+                document.getElementById('d-usage-limit').value = '';
+                document.getElementById('d-first-order').checked = false;
+                document.getElementById('d-active').checked = true;
+            }
+        }
+
         function closeModal(id) {
             document.getElementById(id).classList.add('hidden');
         }
 
         // --- Data Logic (Same as before but with cleaner HTML gen) ---
+        let currentAdminOrders = [];
 
         async function loadAdminOrders() {
             const orders = await API.get('/admin/orders');
+            currentAdminOrders = orders;
             const container = document.getElementById('admin-orders-list');
             if (orders.length === 0) { container.innerHTML = '<p class="text-center text-light">No orders found.</p>'; return; }
 
@@ -361,6 +657,7 @@
                         <th>Customer</th>
                         <th>Amount</th>
                         <th>Status</th>
+                        <th>Payment Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -378,11 +675,69 @@
                                     <option value="CANCELLED" ${o.order_status === 'CANCELLED' ? 'selected' : ''}>CANCELLED</option>
                                 </select>
                             </td>
-                            <td><button onclick="viewOrder(${o.id})" class="btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">Details</button></td>
+                            <td>
+                                <select onchange="updatePaymentStatus(${o.id}, this.value)" 
+                                        style="padding: 5px; font-size: 0.9rem; font-weight: bold; ${o.order_status === 'CANCELLED' ? 'color: gray;' : (o.payment_status === 'COMPLETED' ? 'color: green;' : 'color: orange;')}"
+                                        ${o.order_status === 'CANCELLED' ? 'disabled' : ''}>
+                                    <option value="PENDING" ${o.payment_status === 'PENDING' ? 'selected' : ''}>PENDING</option>
+                                    <option value="COMPLETED" ${o.payment_status === 'COMPLETED' ? 'selected' : ''}>COMPLETED</option>
+                                    <option value="FAILED" ${o.payment_status === 'FAILED' ? 'selected' : ''}>FAILED</option>
+                                </select>
+                            </td>
+                            <td>
+                                <div class="flex" style="gap: 5px;">
+                                    <button onclick="viewOrder(${o.id})" class="btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">Details</button>
+                                    <button onclick="sendWhatsAppAck(${o.id})" class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: #25D366; border-color: #25D366; color: white;">
+                                        <i class="fa-brands fa-whatsapp"></i> Ack
+                                    </button>
+                                </div>
+                            </td>
                         </tr>
                     `).join('')}
                 </tbody>
             </table>`;
+        }
+
+        function sendWhatsAppAck(orderId) {
+            const order = currentAdminOrders.find(o => o.id === orderId);
+            if (!order) return;
+
+            const name = order.customer_name;
+            const phone = order.customer_phone;
+            const amount = order.total_amount;
+
+            if (!phone || phone === 'null' || phone === 'undefined') {
+                alert('No phone number available for this customer.');
+                return;
+            }
+            // Format phone (assume India +91 if not provided, though ideally it should be valid)
+            let formattedPhone = phone.replace(/\\D/g, '');
+            if (formattedPhone.length === 10) {
+                formattedPhone = '91' + formattedPhone;
+            }
+
+            let itemsText = '';
+            if (order.items_snapshot) {
+                try {
+                    const items = typeof order.items_snapshot === 'string' ? JSON.parse(order.items_snapshot) : order.items_snapshot;
+                    itemsText = items.map(i => `- ${i.quantity}x ${i.name || i.product_name}`).join('\n');
+                } catch (e) { }
+            }
+
+            const msg = `Hello ${name}!
+
+This is an acknowledgment message from Shree Roop Creative.
+
+We have received your Order #${orderId} for ₹${amount}.
+
+*Order Details:*
+${itemsText}
+
+Our team is processing it and will keep you updated about it.
+
+Thank you for shopping with us!`;
+            const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
         }
 
         async function updateStatus(id, status) {
@@ -392,22 +747,44 @@
             } catch (e) { alert('Error updating status'); }
         }
 
+        async function updatePaymentStatus(id, status) {
+            try {
+                await API.put(`/admin/orders/${id}/payment-status`, { payment_status: status });
+                if (event && event.target) {
+                    event.target.style.color = status === 'COMPLETED' ? 'green' : 'orange';
+                }
+            } catch (e) { alert('Error updating payment status'); }
+        }
+
         async function loadAdminProducts() {
             const products = await API.get('/products');
             const container = document.getElementById('admin-products-list');
-            container.innerHTML = products.map(p => `
-                <div class="product-card" style="padding: 15px;">
-                    <div style="height: 150px; overflow:hidden; border-radius: 4px; margin-bottom: 10px;">
-                        <img src="${p.image_url || 'https://via.placeholder.com/200'}" style="height: 100%; object-fit: cover;">
+            container.innerHTML = products.map(p => {
+                const isFeatured = (p.is_featured == 1 || p.is_featured === 'true' || p.is_featured === true);
+                const isTrending = (p.is_trending == 1 || p.is_trending === 'true' || p.is_trending === true);
+                return `
+                    <div class="product-card" style="padding: 15px; position: relative;">
+                        <div style="position: absolute; top: 10px; right: 10px; z-index: 10; display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 0.75rem; display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer;">
+                                <input type="checkbox" ${isFeatured ? 'checked' : ''} onchange="toggleProductFlag(${p.id}, 'is_featured', this.checked)">
+                                <span style="font-weight: bold; color: #d4af37;">★ Featured</span>
+                            </label>
+                            <label style="font-size: 0.75rem; display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer;">
+                                <input type="checkbox" ${isTrending ? 'checked' : ''} onchange="toggleProductFlag(${p.id}, 'is_trending', this.checked)">
+                                <span style="font-weight: bold; color: #e67e22;">🔥 Trending</span>
+                            </label>
+                        </div>
+                        <div style="height: 150px; overflow:hidden; border-radius: 4px; margin-bottom: 10px;">
+                            <img src="${p.image_url || 'https://via.placeholder.com/200'}" style="height: 100%; object-fit: cover;">
+                        </div>
+                        <h4 style="font-size: 1rem; margin-bottom: 5px;">${p.name}</h4>
+                        <p style="font-size: 0.9rem;">${formatPrice(p.price)}</p>
+                        <div class="flex" style="gap: 10px; margin-top: 10px;">
+                            <button onclick='showProductModal(${JSON.stringify(p).replace(/'/g, "&apos;").replace(/"/g, "&quot;")})' class="btn-outline" style="flex:1; padding: 5px;">Edit</button>
+                            <button onclick="deleteProduct(${p.id})" class="btn-danger" style="flex:1; padding: 5px;">Delete</button>
+                        </div>
                     </div>
-                    <h4 style="font-size: 1rem; margin-bottom: 5px;">${p.name}</h4>
-                    <p style="font-size: 0.9rem;">${formatPrice(p.price)}</p>
-                    <div class="flex" style="gap: 10px; margin-top: 10px;">
-                        <button onclick='showProductModal(${JSON.stringify(p).replace(/'/g, "")})' class="btn-outline" style="flex:1; padding: 5px;">Edit</button>
-                        <button onclick="deleteProduct(${p.id})" class="btn-danger" style="flex:1; padding: 5px;">Delete</button>
-                    </div>
-                </div>
-            `).join('');
+                `}).join('');
         }
 
         async function loadCategoryDropdown() {
@@ -434,26 +811,58 @@
             const file = document.getElementById('p-file').files[0];
             if (file) formData.append('image', file);
 
+            // Add Featured & Trending Flags
+            const isFeatured = document.getElementById('p-featured').checked;
+            formData.append('is_featured', isFeatured);
+            const isTrending = document.getElementById('p-trending').checked;
+            formData.append('is_trending', isTrending);
+
             try {
+                const token = localStorage.getItem('token');
+
                 if (id) {
-                    // Edit
-                    const data = Object.fromEntries(formData.entries());
-                    // Remove file object if strictly JSON PUT, but let's stick to our known limitation or try-catch
-                    // Previous logic: PUT expects JSON. 
-                    const json = {
-                        name: data.name, description: data.description, price: data.price,
-                        category: data.category, stock: data.stock, image_url: manualUrl
-                    };
-                    await API.put(`/products/${id}`, json);
+                    // Edit - Use FormData to support file uploads
+                    await fetch(`/api/products/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: formData
+                    });
                 } else {
-                    const token = localStorage.getItem('token');
+                    // Create - Use FormData
                     await fetch('/api/products', {
-                        method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: formData
                     });
                 }
                 closeModal('product-modal');
                 loadAdminProducts();
-            } catch (e) { alert('Operation failed'); }
+            } catch (e) {
+                console.error('Save product error:', e);
+                alert('Operation failed');
+            }
+        }
+
+        async function toggleProductFlag(id, flag, value) {
+            try {
+                const token = localStorage.getItem('token');
+                const body = {};
+                body[flag] = value;
+                await fetch(`/api/products/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+                // No need to reload everything, visual state is already updated by checkbox
+            } catch (e) {
+                console.error(e);
+                alert('Failed to update featured status');
+                // Revert checkbox if failed
+                loadAdminProducts();
+            }
         }
 
         async function deleteProduct(id) {
@@ -534,7 +943,13 @@
             const formData = new FormData();
             formData.append('title', document.getElementById('b-title').value);
             formData.append('link', document.getElementById('b-link').value);
-            formData.append('image', document.getElementById('b-file').files[0]);
+
+            const manualUrl = document.getElementById('b-img').value;
+            if (manualUrl) formData.append('thumbnail_url', manualUrl);
+
+            const file = document.getElementById('b-file').files[0];
+            if (file) formData.append('image', file);
+
             try {
                 const token = localStorage.getItem('token');
                 await fetch('/api/brochures', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
@@ -547,6 +962,121 @@
             if (confirm('Delete?')) {
                 await API.delete(`/brochures/${id}`);
                 loadAdminBrochures();
+            }
+        }
+
+        // --- Discounts / Coupons ---
+        async function loadAdminDiscounts() {
+            const container = document.getElementById('admin-discounts-list');
+            try {
+                const discounts = await API.get('/discounts');
+
+                if (discounts.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color:#888;">No discount coupons found.</p>';
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div style="overflow-x: auto; background: #fff; border: 1px solid #eee; border-radius: 8px;">
+                        <table style="width: 100%; min-width: 800px; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f8f8f8;">
+                                    <th style="text-align:left; padding: 12px;">Coupon Code</th>
+                                    <th style="padding: 12px;">Type/Value</th>
+                                    <th style="padding: 12px;">Conditions</th>
+                                    <th style="padding: 12px; text-align: center;">Active Status</th>
+                                    <th style="text-align:right; padding: 12px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${discounts.map(d => {
+                    const valueStr = d.type === 'PERCENTAGE' ? d.value + '%' : formatPrice(d.value);
+                    const isActive = (d.is_active == 1 || d.is_active === true);
+                    const isFirstOrder = (d.first_order_only == 1 || d.first_order_only === true);
+
+                    let conditions = [];
+                    if (parseFloat(d.min_order_value) > 0) conditions.push('Min: ' + formatPrice(d.min_order_value));
+                    if (d.usage_limit_per_user > 0) conditions.push('Limit: ' + d.usage_limit_per_user + '/user');
+                    if (isFirstOrder) conditions.push('First Order Only');
+                    if (conditions.length === 0) conditions.push('None');
+
+                    return `
+                                    <tr style="border-top: 1px solid #f0f0f0; opacity: ${isActive ? '1' : '0.6'}">
+                                        <td style="padding: 12px; font-weight: bold; color: var(--accent-color); font-size: 1.1rem;">
+                                            ${d.code}
+                                        </td>
+                                        <td style="padding: 12px;">${d.type}<br><strong>${valueStr}</strong></td>
+                                        <td style="padding: 12px; font-size: 0.85rem; color: #555;">${conditions.join('<br>')}</td>
+                                        <td style="padding: 12px; text-align: center;">
+                                            <label class="switch" style="font-size: 0.8rem;">
+                                                <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleDiscountStatus(${d.id}, this.checked)">
+                                                <span class="slider round"></span>
+                                            </label>
+                                        </td>
+                                        <td style="padding: 12px; text-align: right;">
+                                            <button onclick='showDiscountModal(${JSON.stringify(d).replace(/'/g, "&apos;")})' class="btn-outline" style="padding: 5px 10px; font-size: 0.85rem; margin-right: 5px;">Edit</button>
+                                            <button onclick="deleteDiscount(${d.id})" class="btn-danger" style="padding: 5px 10px; font-size: 0.85rem;">Delete</button>
+                                        </td>
+                                    </tr>
+                                    `;
+                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<p style="text-align:center; color:#c00;">Failed to load discounts.</p>';
+            }
+        }
+
+        async function saveDiscount(e) {
+            e.preventDefault();
+            const id = document.getElementById('d-id').value;
+            const payload = {
+                code: document.getElementById('d-code').value,
+                type: document.getElementById('d-type').value,
+                value: parseFloat(document.getElementById('d-value').value),
+                min_order_value: parseFloat(document.getElementById('d-min-order').value) || 0,
+                usage_limit_per_user: parseInt(document.getElementById('d-usage-limit').value) || null,
+                first_order_only: document.getElementById('d-first-order').checked,
+                is_active: document.getElementById('d-active').checked
+            };
+
+            try {
+                if (id) {
+                    await API.put(`/discounts/${id}`, payload);
+                } else {
+                    await API.post('/discounts', payload);
+                }
+                closeModal('discount-modal');
+                loadAdminDiscounts();
+            } catch (e) {
+                console.error(e);
+                alert('Failed to save coupon. The code might already exist.');
+            }
+        }
+
+        async function toggleDiscountStatus(id, isActive) {
+            try {
+                await API.put(`/discounts/${id}`, { is_active: isActive });
+                // Visual toggle handled natively by checkbox
+            } catch (e) {
+                console.error(e);
+                alert('Failed to update status');
+                loadAdminDiscounts(); // Reload to reset stuck UI
+            }
+        }
+
+        async function deleteDiscount(id) {
+            if (confirm('Delete this discount coupon completely?')) {
+                try {
+                    await API.delete(`/discounts/${id}`);
+                    loadAdminDiscounts();
+                } catch (e) {
+                    console.error(e);
+                    alert('Failed to delete discount');
+                }
             }
         }
 
@@ -635,10 +1165,10 @@
 
                 let itemsHtml = order.items.map(item => `
                     <tr>
-                        <td>${item.product_name}</td>
-                        <td>${item.quantity}</td>
-                        <td>${formatPrice(item.price)}</td>
-                        <td>${formatPrice(item.quantity * item.price)}</td>
+                        <td style="padding: 8px;">${item.name || item.product_name || 'Unknown Item'}</td>
+                        <td style="text-align: center; padding: 8px;">${item.quantity}</td>
+                        <td style="text-align: right; padding: 8px;">${formatPrice(item.price)}</td>
+                        <td style="text-align: right; padding: 8px;">${formatPrice(item.quantity * item.price)}</td>
                     </tr>
                 `).join('');
 
@@ -700,6 +1230,181 @@
                 console.error(e);
                 alert('Error loading order details');
             }
+        }
+
+        // --- Instagram / Styled Looks ---
+        async function loadAdminInstagram() {
+            const list = await API.get('/instagram');
+            const container = document.getElementById('admin-instagram-list');
+            if (list.length === 0) {
+                container.innerHTML = '<p class="text-center" style="grid-column: 1/-1;">No looks added yet.</p>';
+                return;
+            }
+            container.innerHTML = list.map(item => `
+                <div style="background: #fff; padding: 10px; border-radius: 6px; box-shadow: var(--shadow-sm); position: relative;">
+                    <div style="height: 150px; overflow:hidden; border-radius: 4px; margin-bottom: 10px;">
+                        <img src="${item.image_url}" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <button onclick="deleteInstagram(${item.id})" class="btn-danger" style="width: 100%; padding: 5px;">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        function showInstagramModal() {
+            document.getElementById('instagram-modal').classList.remove('hidden');
+            document.querySelector('#instagram-modal form').reset();
+        }
+
+        async function saveInstagram(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            const manualUrl = document.getElementById('insta-img').value;
+            if (manualUrl) formData.append('image_url', manualUrl);
+
+            const file = document.getElementById('insta-file').files[0];
+            if (file) formData.append('image', file);
+
+            formData.append('link', document.getElementById('insta-link').value);
+
+            try {
+                const token = localStorage.getItem('token');
+                await fetch('/api/instagram', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                closeModal('instagram-modal');
+                loadAdminInstagram();
+            } catch (e) { alert('Upload failed'); }
+        }
+
+        async function deleteInstagram(id) {
+            if (confirm('Delete this look?')) {
+                await API.delete(`/instagram/${id}`);
+                loadAdminInstagram();
+            }
+        }
+
+        // --- Reviews ---
+        let adminReviewsCache = [];
+
+        function updateFeaturedCount() {
+            const el = document.getElementById('featured-count');
+            if (!el) return;
+            const count = adminReviewsCache.filter(r => r._selectedFeatured).length;
+            el.textContent = String(count);
+        }
+
+        function toggleFeaturedSelection(id, checked) {
+            const review = adminReviewsCache.find(r => String(r.id) === String(id));
+            if (!review) return;
+
+            // Enforce max 3 selections
+            const currentCount = adminReviewsCache.filter(r => r._selectedFeatured).length;
+            if (checked && currentCount >= 3) {
+                alert('You can feature only 3 reviews.');
+                // Reset checkbox UI
+                const cb = document.getElementById(`feature-${id}`);
+                if (cb) cb.checked = false;
+                return;
+            }
+
+            review._selectedFeatured = Boolean(checked);
+            updateFeaturedCount();
+        }
+
+        async function setReviewApproval(id, approved) {
+            try {
+                await API.put(`/reviews/${id}/approve`, { is_approved: approved });
+                await loadAdminReviews();
+            } catch (e) {
+                alert('Failed to update approval');
+            }
+        }
+
+        async function loadAdminReviews() {
+            const container = document.getElementById('admin-reviews-list');
+            if (!container) return;
+
+            try {
+                const reviews = await API.get('/reviews/all');
+                adminReviewsCache = (reviews || []).map(r => ({
+                    ...r,
+                    _selectedFeatured: Boolean(r.is_featured)
+                }));
+
+                updateFeaturedCount();
+
+                if (adminReviewsCache.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color:#888;">No reviews yet.</p>';
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div style="overflow-x: auto; background: #fff; border: 1px solid #eee; border-radius: 8px;">
+                        <table style="width: 100%; min-width: 900px; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:left; padding: 12px;">Author</th>
+                                    <th style="text-align:center; padding: 12px;">Rating</th>
+                                    <th style="text-align:left; padding: 12px;">Review</th>
+                                    <th style="text-align:center; padding: 12px;">Approved</th>
+                                    <th style="text-align:center; padding: 12px;">Show on Home</th>
+                                    <th style="text-align:left; padding: 12px;">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${adminReviewsCache.map(r => `
+                                    <tr style="border-top: 1px solid #f0f0f0;">
+                                        <td style="padding: 12px; font-weight: 600;">${escapeHtml(r.author_name)}</td>
+                                        <td style="padding: 12px; text-align:center;">${r.rating ? `${r.rating}/5` : '-'}</td>
+                                        <td style="padding: 12px;">${escapeHtml(r.content)}</td>
+                                        <td style="padding: 12px; text-align:center;">
+                                            <input type="checkbox" ${r.is_approved ? 'checked' : ''} onchange="setReviewApproval(${r.id}, this.checked)">
+                                        </td>
+                                        <td style="padding: 12px; text-align:center;">
+                                            <input id="feature-${r.id}" type="checkbox"
+                                                ${r.is_approved ? '' : 'disabled'}
+                                                ${r.is_featured ? 'checked' : ''}
+                                                onchange="toggleFeaturedSelection(${r.id}, this.checked)">
+                                        </td>
+                                        <td style="padding: 12px;">${new Date(r.created_at).toLocaleString()}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<p style="text-align:center; color:#c00;">Failed to load reviews.</p>';
+            }
+        }
+
+        async function saveFeaturedReviews() {
+            const selected = adminReviewsCache.filter(r => r._selectedFeatured).map(r => r.id);
+            if (selected.length !== 3) {
+                alert('Please select exactly 3 reviews to feature on the homepage.');
+                return;
+            }
+
+            try {
+                await API.put('/reviews/featured', { featuredIds: selected });
+                alert('Featured reviews saved.');
+                await loadAdminReviews();
+            } catch (e) {
+                console.error(e);
+                alert('Failed to save featured reviews.');
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
         }
     </script>
     <script src="js/mobile-header.js"></script>

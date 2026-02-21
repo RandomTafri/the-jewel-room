@@ -1,6 +1,6 @@
 const db = require('../db');
 
-async function calculateDiscount(cartItems, couponCode, subtotal) {
+async function calculateDiscount(cartItems, couponCode, subtotal, userId = null) {
     let discountAmount = 0;
     let appliedRule = null;
     let message = '';
@@ -22,12 +22,35 @@ async function calculateDiscount(cartItems, couponCode, subtotal) {
     if (!couponCode) return { discountAmount: 0, finalTotal: subtotal, message: '' };
 
     try {
-        const res = await db.query('SELECT * FROM discounts WHERE code = $1 AND is_active = true', [couponCode]);
+        const res = await db.query('SELECT * FROM discounts WHERE code = ? AND is_active = true', [couponCode]);
         if (res.rows.length === 0) {
             return { discountAmount: 0, finalTotal: subtotal, message: 'Invalid Coupon' };
         }
 
         const rule = res.rows[0];
+
+        // Check Advanced Constraints
+        if (rule.first_order_only || rule.usage_limit_per_user > 0) {
+            if (!userId) {
+                return { discountAmount: 0, finalTotal: subtotal, message: 'Please log in to use this coupon' };
+            }
+
+            // Check how many times this user has used this specific coupon
+            if (rule.usage_limit_per_user > 0) {
+                const usageRes = await db.query('SELECT COUNT(*) as count FROM orders WHERE user_id = ? AND coupon_code = ?', [userId, couponCode]);
+                if (usageRes.rows[0].count >= rule.usage_limit_per_user) {
+                    return { discountAmount: 0, finalTotal: subtotal, message: 'Coupon usage limit reached' };
+                }
+            }
+
+            // Check if it's their first order ever
+            if (rule.first_order_only) {
+                const orderRes = await db.query('SELECT COUNT(*) as count FROM orders WHERE user_id = ?', [userId]);
+                if (orderRes.rows[0].count > 0) {
+                    return { discountAmount: 0, finalTotal: subtotal, message: 'This coupon is valid for your first order only' };
+                }
+            }
+        }
 
         // Check Min Order
         if (subtotal < rule.min_order_value) {

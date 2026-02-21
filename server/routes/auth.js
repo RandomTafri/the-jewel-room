@@ -11,15 +11,19 @@ router.post('/register', async (req, res) => {
     const { name, email, password, phone } = req.body;
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        const result = await db.query(
-            'INSERT INTO users (name, email, password_hash, phone) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role',
+        const insert = await db.query(
+            'INSERT INTO users (name, email, password_hash, phone) VALUES (?, ?, ?, ?)',
             [name, email, hashedPassword, phone]
+        );
+        const result = await db.query(
+            'SELECT id, name, email, role FROM users WHERE id = ?',
+            [insert.rows.insertId]
         );
         const user = result.rows[0];
         const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
         res.status(201).json({ user, token });
     } catch (err) {
-        if (err.code === '23505') { // Unique constraint violation
+        if (err.code === 'ER_DUP_ENTRY') { // Unique constraint violation
             return res.status(400).json({ error: 'Email already exists' });
         }
         console.error(err);
@@ -31,7 +35,7 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
-        const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+        const result = await db.query('SELECT * FROM users WHERE email = ?', [email]);
         const user = result.rows[0];
 
         if (!user) return res.status(400).json({ error: 'User not found' });
@@ -63,7 +67,7 @@ router.post('/admin/login', async (req, res) => {
     // Let's just use the Usage DB flow for consistency.
 
     try {
-        const result = await db.query('SELECT * FROM users WHERE email = $1 AND role = $2', [email, 'admin']);
+        const result = await db.query('SELECT * FROM users WHERE email = ? AND role = ?', [email, 'admin']);
         const user = result.rows[0];
 
         if (!user) return res.status(401).json({ error: 'Invalid admin credentials' });
@@ -88,11 +92,15 @@ router.get('/me', async (req, res) => {
     const token = authHeader.split(' ')[1];
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        const result = await db.query('SELECT id, name, email, role, phone FROM users WHERE id = $1', [decoded.id]);
+        const result = await db.query('SELECT id, name, email, role, phone FROM users WHERE id = ?', [decoded.id]);
         if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
         res.json({ user: result.rows[0] });
     } catch (err) {
-        res.status(401).json({ error: 'Invalid token' });
+        if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+        console.error('Auth /me error:', err);
+        res.status(500).json({ error: 'Server error check auth' });
     }
 });
 
