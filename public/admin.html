@@ -682,11 +682,34 @@
                                     <option value="FAILED" ${o.payment_status === 'FAILED' ? 'selected' : ''}>FAILED</option>
                                 </select>
                             </td>
-                            <td><button onclick="viewOrder(${o.id})" class="btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">Details</button></td>
+                            <td>
+                                <div class="flex" style="gap: 5px;">
+                                    <button onclick="viewOrder(${o.id})" class="btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">Details</button>
+                                    <button onclick="sendWhatsAppAck(${o.id}, '${o.customer_name.replace(/'/g, "\\'")}', '${o.customer_phone}', ${o.total_amount})" class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: #25D366; border-color: #25D366; color: white;">
+                                        <i class="fa-brands fa-whatsapp"></i> Ack
+                                    </button>
+                                </div>
+                            </td>
                         </tr>
                     `).join('')}
                 </tbody>
             </table>`;
+        }
+
+        function sendWhatsAppAck(orderId, name, phone, amount) {
+            if (!phone || phone === 'null' || phone === 'undefined') {
+                alert('No phone number available for this customer.');
+                return;
+            }
+            // Format phone (assume India +91 if not provided, though ideally it should be valid)
+            let formattedPhone = phone.replace(/\\D/g, '');
+            if (formattedPhone.length === 10) {
+                formattedPhone = '91' + formattedPhone;
+            }
+
+            const msg = `Hello ${name}!\\n\\nThis is an acknowledgment message from Shree Roop Creative.\\n\\nWe have received your Order #${orderId} for ₹${amount}. Our team is processing it and will update you with shipping details soon.\\n\\nThank you for shopping with us!`;
+            const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
         }
 
         async function updateStatus(id, status) {
