@@ -720,11 +720,22 @@
             if (order.items_snapshot) {
                 try {
                     const items = typeof order.items_snapshot === 'string' ? JSON.parse(order.items_snapshot) : order.items_snapshot;
-                    itemsText = items.map(i => `- ${i.quantity}x ${i.name || i.product_name}`).join('\\n');
+                    itemsText = items.map(i => `- ${i.quantity}x ${i.name || i.product_name}`).join('\n');
                 } catch (e) { }
             }
 
-            const msg = `Hello ${name}!\\n\\nThis is an acknowledgment message from Shree Roop Creative.\\n\\nWe have received your Order #${orderId} for ₹${amount}.\\n\\n*Order Details:*\\n${itemsText}\\n\\nOur team is processing it and will update you with shipping details soon.\\n\\nThank you for shopping with us!`;
+            const msg = `Hello ${name}!
+
+This is an acknowledgment message from Shree Roop Creative.
+
+We have received your Order #${orderId} for ₹${amount}.
+
+*Order Details:*
+${itemsText}
+
+Our team is processing it and will keep you updated about it.
+
+Thank you for shopping with us!`;
             const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`;
             window.open(url, '_blank');
         }
