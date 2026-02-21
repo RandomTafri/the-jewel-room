@@ -111,6 +111,7 @@
             try {
                 if (State.token) {
                     await API.post('/cart', { productId: id, quantity: parseInt(qty) });
+                    App.refreshCart();
                 } else {
                     // Guest
                     let items = JSON.parse(localStorage.getItem('guest_cart') || '[]');
