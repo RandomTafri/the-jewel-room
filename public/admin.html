@@ -642,9 +642,11 @@
         }
 
         // --- Data Logic (Same as before but with cleaner HTML gen) ---
+        let currentAdminOrders = [];
 
         async function loadAdminOrders() {
             const orders = await API.get('/admin/orders');
+            currentAdminOrders = orders;
             const container = document.getElementById('admin-orders-list');
             if (orders.length === 0) { container.innerHTML = '<p class="text-center text-light">No orders found.</p>'; return; }
 
@@ -685,7 +687,7 @@
                             <td>
                                 <div class="flex" style="gap: 5px;">
                                     <button onclick="viewOrder(${o.id})" class="btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">Details</button>
-                                    <button onclick="sendWhatsAppAck(${o.id}, '${o.customer_name.replace(/'/g, "\\'")}', '${o.customer_phone}', ${o.total_amount})" class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: #25D366; border-color: #25D366; color: white;">
+                                    <button onclick="sendWhatsAppAck(${o.id})" class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: #25D366; border-color: #25D366; color: white;">
                                         <i class="fa-brands fa-whatsapp"></i> Ack
                                     </button>
                                 </div>
@@ -696,7 +698,14 @@
             </table>`;
         }
 
-        function sendWhatsAppAck(orderId, name, phone, amount) {
+        function sendWhatsAppAck(orderId) {
+            const order = currentAdminOrders.find(o => o.id === orderId);
+            if (!order) return;
+
+            const name = order.customer_name;
+            const phone = order.customer_phone;
+            const amount = order.total_amount;
+
             if (!phone || phone === 'null' || phone === 'undefined') {
                 alert('No phone number available for this customer.');
                 return;
@@ -707,7 +716,15 @@
                 formattedPhone = '91' + formattedPhone;
             }
 
-            const msg = `Hello ${name}!\\n\\nThis is an acknowledgment message from Shree Roop Creative.\\n\\nWe have received your Order #${orderId} for ₹${amount}. Our team is processing it and will update you with shipping details soon.\\n\\nThank you for shopping with us!`;
+            let itemsText = '';
+            if (order.items_snapshot) {
+                try {
+                    const items = typeof order.items_snapshot === 'string' ? JSON.parse(order.items_snapshot) : order.items_snapshot;
+                    itemsText = items.map(i => `- ${i.quantity}x ${i.name || i.product_name}`).join('\\n');
+                } catch (e) { }
+            }
+
+            const msg = `Hello ${name}!\\n\\nThis is an acknowledgment message from Shree Roop Creative.\\n\\nWe have received your Order #${orderId} for ₹${amount}.\\n\\n*Order Details:*\\n${itemsText}\\n\\nOur team is processing it and will update you with shipping details soon.\\n\\nThank you for shopping with us!`;
             const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`;
             window.open(url, '_blank');
         }
