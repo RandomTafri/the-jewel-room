@@ -45,6 +45,7 @@ try {
     const cartRoutes = require('./routes/cart');
     const orderRoutes = require('./routes/orders');
     const adminRoutes = require('./routes/admin');
+    const discountRoutes = require('./routes/discounts');
     const brochureRoutes = require('./routes/brochures');
     const categoryRoutes = require('./routes/categories');
     const wishlistRoutes = require('./routes/wishlist');
@@ -59,6 +60,7 @@ try {
     app.use('/api/cart', cartRoutes);
     app.use('/api/orders', orderRoutes);
     app.use('/api/admin', adminRoutes);
+    app.use('/api/discounts', discountRoutes);
     app.use('/api/brochures', brochureRoutes);
     app.use('/api/categories', categoryRoutes);
     app.use('/api/wishlist', wishlistRoutes);

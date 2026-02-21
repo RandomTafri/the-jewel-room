@@ -78,6 +78,8 @@
                     Categories</button>
                 <button onclick="switchTab('brochures')" id="btn-brochures"><i class="fa-solid fa-file-pdf"></i> &nbsp;
                     Brochures</button>
+                <button onclick="switchTab('discounts')" id="btn-discounts"><i class="fa-solid fa-tags"></i> &nbsp;
+                    Coupons</button>
                 <button onclick="switchTab('footer')" id="btn-footer"><i class="fa-solid fa-link"></i> &nbsp;
                     Footer Links</button>
                 <button onclick="switchTab('instagram')" id="btn-instagram"><i class="fa-brands fa-instagram"></i>
@@ -146,6 +148,19 @@
                 </div>
                 <div id="admin-brochures-list" class="grid"
                     style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"></div>
+            </div>
+
+            <!-- Coupons / Discounts View -->
+            <div id="tab-discounts" class="tab-content hidden">
+                <div class="admin-header">
+                    <div>
+                        <h3>Discount Coupons</h3>
+                        <p style="margin-top: 10px; color: #666;">Create and manage promo codes for your store.</p>
+                    </div>
+                    <button onclick="showDiscountModal()" class="btn"><i class="fa-solid fa-plus"></i> Add
+                        Coupon</button>
+                </div>
+                <div id="admin-discounts-list"></div>
             </div>
 
             <!-- Footer Links View -->
@@ -377,6 +392,55 @@
         </div>
     </div>
 
+    <!-- Discount Coupon Modal -->
+    <div id="discount-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="flex justify-between items-center mb-20">
+                <h3 id="discount-modal-title" style="margin: 0;">Add Coupon</h3>
+                <button onclick="closeModal('discount-modal')"
+                    style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <form onsubmit="saveDiscount(event)" style="display: grid; gap: 15px;">
+                <input type="hidden" id="d-id">
+
+                <label style="font-size: 0.85rem; font-weight: bold; margin-bottom: -10px;">Coupon Code</label>
+                <input type="text" id="d-code" placeholder="e.g. SUMMER10, WELCOME500"
+                    style="text-transform: uppercase;" required>
+
+                <div class="flex" style="gap: 15px;">
+                    <div style="flex: 1;">
+                        <label
+                            style="font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; display: block;">Discount
+                            Type</label>
+                        <select id="d-type" required>
+                            <option value="PERCENTAGE">Percentage (%)</option>
+                            <option value="FIXED">Fixed Amount (₹)</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label
+                            style="font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; display: block;">Discount
+                            Value</label>
+                        <input type="number" id="d-value" placeholder="e.g. 10 or 500" step="0.01" min="0" required>
+                    </div>
+                </div>
+
+                <label style="font-size: 0.85rem; font-weight: bold; margin-bottom: -10px;">Minimum Order Value
+                    (₹)</label>
+                <input type="number" id="d-min-order" placeholder="e.g. 1000 (Optional)" step="0.01" min="0">
+                <p style="font-size: 0.8rem; color: #666; margin-top: -10px;">Leave 0 or empty for no minimum order
+                    requirement.</p>
+
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 10px;">
+                    <input type="checkbox" id="d-active" style="width: 20px; height: 20px;" checked>
+                    <span style="font-weight: bold;">Is Coupon Active?</span>
+                </label>
+
+                <button type="submit" class="btn" style="margin-top: 15px;">Save Coupon</button>
+            </form>
+        </div>
+    </div>
+
     <script src="js/app.js"></script>
     <script>
         // Init
@@ -447,6 +511,7 @@
             if (tab === 'products') { loadAdminProducts(); loadCategoryDropdown(); }
             if (tab === 'categories') loadAdminCategories();
             if (tab === 'brochures') loadAdminBrochures();
+            if (tab === 'discounts') loadAdminDiscounts();
             if (tab === 'footer') loadInfoPages();
             if (tab === 'instagram') loadAdminInstagram();
             if (tab === 'reviews') loadAdminReviews();
@@ -532,6 +597,26 @@
         function showBrochureModal() {
             document.getElementById('brochure-modal').classList.remove('hidden');
             document.querySelector('#brochure-modal form').reset();
+        }
+
+        function showDiscountModal(discount = null) {
+            document.getElementById('discount-modal').classList.remove('hidden');
+            const form = document.querySelector('#discount-modal form');
+            form.reset();
+
+            if (discount) {
+                document.getElementById('discount-modal-title').innerText = 'Edit Coupon';
+                document.getElementById('d-id').value = discount.id;
+                document.getElementById('d-code').value = discount.code;
+                document.getElementById('d-type').value = discount.type;
+                document.getElementById('d-value').value = discount.value;
+                document.getElementById('d-min-order').value = discount.min_order_value || '';
+                document.getElementById('d-active').checked = (discount.is_active == 1 || discount.is_active === true);
+            } else {
+                document.getElementById('discount-modal-title').innerText = 'Add Coupon';
+                document.getElementById('d-id').value = '';
+                document.getElementById('d-active').checked = true;
+            }
         }
 
         function closeModal(id) {
@@ -789,6 +874,113 @@
             if (confirm('Delete?')) {
                 await API.delete(`/brochures/${id}`);
                 loadAdminBrochures();
+            }
+        }
+
+        // --- Discounts / Coupons ---
+        async function loadAdminDiscounts() {
+            const container = document.getElementById('admin-discounts-list');
+            try {
+                const discounts = await API.get('/discounts');
+
+                if (discounts.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color:#888;">No discount coupons found.</p>';
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div style="overflow-x: auto; background: #fff; border: 1px solid #eee; border-radius: 8px;">
+                        <table style="width: 100%; min-width: 800px; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f8f8f8;">
+                                    <th style="text-align:left; padding: 12px;">Coupon Code</th>
+                                    <th style="padding: 12px;">Type</th>
+                                    <th style="padding: 12px;">Value</th>
+                                    <th style="padding: 12px;">Min. Order</th>
+                                    <th style="padding: 12px; text-align: center;">Active Status</th>
+                                    <th style="text-align:right; padding: 12px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${discounts.map(d => {
+                    const valueStr = d.type === 'PERCENTAGE' ? d.value + '%' : formatPrice(d.value);
+                    const isActive = (d.is_active == 1 || d.is_active === true);
+                    return `
+                                    <tr style="border-top: 1px solid #f0f0f0; opacity: ${isActive ? '1' : '0.6'}">
+                                        <td style="padding: 12px; font-weight: bold; color: var(--accent-color); font-size: 1.1rem;">
+                                            ${d.code}
+                                        </td>
+                                        <td style="padding: 12px;">${d.type}</td>
+                                        <td style="padding: 12px; font-weight: bold;">${valueStr}</td>
+                                        <td style="padding: 12px;">${d.min_order_value > 0 ? formatPrice(d.min_order_value) : 'Any'}</td>
+                                        <td style="padding: 12px; text-align: center;">
+                                            <label class="switch" style="font-size: 0.8rem;">
+                                                <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleDiscountStatus(${d.id}, this.checked)">
+                                                <span class="slider round"></span>
+                                            </label>
+                                        </td>
+                                        <td style="padding: 12px; text-align: right;">
+                                            <button onclick='showDiscountModal(${JSON.stringify(d).replace(/'/g, "&apos;")})' class="btn-outline" style="padding: 5px 10px; font-size: 0.85rem; margin-right: 5px;">Edit</button>
+                                            <button onclick="deleteDiscount(${d.id})" class="btn-danger" style="padding: 5px 10px; font-size: 0.85rem;">Delete</button>
+                                        </td>
+                                    </tr>
+                                    `;
+                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<p style="text-align:center; color:#c00;">Failed to load discounts.</p>';
+            }
+        }
+
+        async function saveDiscount(e) {
+            e.preventDefault();
+            const id = document.getElementById('d-id').value;
+            const payload = {
+                code: document.getElementById('d-code').value,
+                type: document.getElementById('d-type').value,
+                value: parseFloat(document.getElementById('d-value').value),
+                min_order_value: parseFloat(document.getElementById('d-min-order').value) || 0,
+                is_active: document.getElementById('d-active').checked
+            };
+
+            try {
+                if (id) {
+                    await API.put(`/discounts/${id}`, payload);
+                } else {
+                    await API.post('/discounts', payload);
+                }
+                closeModal('discount-modal');
+                loadAdminDiscounts();
+            } catch (e) {
+                console.error(e);
+                alert('Failed to save coupon. The code might already exist.');
+            }
+        }
+
+        async function toggleDiscountStatus(id, isActive) {
+            try {
+                await API.put(`/discounts/${id}`, { is_active: isActive });
+                // Visual toggle handled natively by checkbox
+            } catch (e) {
+                console.error(e);
+                alert('Failed to update status');
+                loadAdminDiscounts(); // Reload to reset stuck UI
+            }
+        }
+
+        async function deleteDiscount(id) {
+            if (confirm('Delete this discount coupon completely?')) {
+                try {
+                    await API.delete(`/discounts/${id}`);
+                    loadAdminDiscounts();
+                } catch (e) {
+                    console.error(e);
+                    alert('Failed to delete discount');
+                }
             }
         }
 
