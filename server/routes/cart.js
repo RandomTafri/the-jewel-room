@@ -51,7 +51,7 @@ router.get('/', async (req, res) => {
 
         let discount = { discountAmount: 0, finalTotal: subtotal, message: '' };
         if (couponCode) {
-            discount = await calculateDiscount(items.rows, couponCode, subtotal);
+            discount = await calculateDiscount(items.rows, couponCode, subtotal, userId);
         }
 
         res.json({

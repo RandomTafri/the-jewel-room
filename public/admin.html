@@ -431,6 +431,20 @@
                 <p style="font-size: 0.8rem; color: #666; margin-top: -10px;">Leave 0 or empty for no minimum order
                     requirement.</p>
 
+                <div class="flex" style="gap: 15px; margin-top: 5px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; display: block;">Usage
+                            Limit Per User</label>
+                        <input type="number" id="d-usage-limit" placeholder="e.g. 1" min="1">
+                        <p style="font-size: 0.75rem; color: #666; margin-top: 2px;">Leave empty for unlimited</p>
+                    </div>
+                </div>
+
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 10px;">
+                    <input type="checkbox" id="d-first-order" style="width: 20px; height: 20px;">
+                    <span style="font-weight: bold; color: var(--primary-color);">Valid for First Order Only?</span>
+                </label>
+
                 <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 10px;">
                     <input type="checkbox" id="d-active" style="width: 20px; height: 20px;" checked>
                     <span style="font-weight: bold;">Is Coupon Active?</span>
@@ -611,10 +625,14 @@
                 document.getElementById('d-type').value = discount.type;
                 document.getElementById('d-value').value = discount.value;
                 document.getElementById('d-min-order').value = discount.min_order_value || '';
+                document.getElementById('d-usage-limit').value = discount.usage_limit_per_user || '';
+                document.getElementById('d-first-order').checked = (discount.first_order_only == 1 || discount.first_order_only === true);
                 document.getElementById('d-active').checked = (discount.is_active == 1 || discount.is_active === true);
             } else {
                 document.getElementById('discount-modal-title').innerText = 'Add Coupon';
                 document.getElementById('d-id').value = '';
+                document.getElementById('d-usage-limit').value = '';
+                document.getElementById('d-first-order').checked = false;
                 document.getElementById('d-active').checked = true;
             }
         }
@@ -894,9 +912,8 @@
                             <thead>
                                 <tr style="background: #f8f8f8;">
                                     <th style="text-align:left; padding: 12px;">Coupon Code</th>
-                                    <th style="padding: 12px;">Type</th>
-                                    <th style="padding: 12px;">Value</th>
-                                    <th style="padding: 12px;">Min. Order</th>
+                                    <th style="padding: 12px;">Type/Value</th>
+                                    <th style="padding: 12px;">Conditions</th>
                                     <th style="padding: 12px; text-align: center;">Active Status</th>
                                     <th style="text-align:right; padding: 12px;">Actions</th>
                                 </tr>
@@ -905,14 +922,21 @@
                                 ${discounts.map(d => {
                     const valueStr = d.type === 'PERCENTAGE' ? d.value + '%' : formatPrice(d.value);
                     const isActive = (d.is_active == 1 || d.is_active === true);
+                    const isFirstOrder = (d.first_order_only == 1 || d.first_order_only === true);
+
+                    let conditions = [];
+                    if (parseFloat(d.min_order_value) > 0) conditions.push('Min: ' + formatPrice(d.min_order_value));
+                    if (d.usage_limit_per_user > 0) conditions.push('Limit: ' + d.usage_limit_per_user + '/user');
+                    if (isFirstOrder) conditions.push('First Order Only');
+                    if (conditions.length === 0) conditions.push('None');
+
                     return `
                                     <tr style="border-top: 1px solid #f0f0f0; opacity: ${isActive ? '1' : '0.6'}">
                                         <td style="padding: 12px; font-weight: bold; color: var(--accent-color); font-size: 1.1rem;">
                                             ${d.code}
                                         </td>
-                                        <td style="padding: 12px;">${d.type}</td>
-                                        <td style="padding: 12px; font-weight: bold;">${valueStr}</td>
-                                        <td style="padding: 12px;">${d.min_order_value > 0 ? formatPrice(d.min_order_value) : 'Any'}</td>
+                                        <td style="padding: 12px;">${d.type}<br><strong>${valueStr}</strong></td>
+                                        <td style="padding: 12px; font-size: 0.85rem; color: #555;">${conditions.join('<br>')}</td>
                                         <td style="padding: 12px; text-align: center;">
                                             <label class="switch" style="font-size: 0.8rem;">
                                                 <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleDiscountStatus(${d.id}, this.checked)">
@@ -944,6 +968,8 @@
                 type: document.getElementById('d-type').value,
                 value: parseFloat(document.getElementById('d-value').value),
                 min_order_value: parseFloat(document.getElementById('d-min-order').value) || 0,
+                usage_limit_per_user: parseInt(document.getElementById('d-usage-limit').value) || null,
+                first_order_only: document.getElementById('d-first-order').checked,
                 is_active: document.getElementById('d-active').checked
             };
 

@@ -16,7 +16,7 @@ router.get('/', isAdmin, async (req, res) => {
 
 // POST new discount (Admin only)
 router.post('/', isAdmin, async (req, res) => {
-    const { code, type, value, min_order_value, is_active } = req.body;
+    const { code, type, value, min_order_value, usage_limit_per_user, first_order_only, is_active } = req.body;
 
     if (!code || !type || value === undefined) {
         return res.status(400).json({ error: 'Code, type, and value are required' });
@@ -24,16 +24,20 @@ router.post('/', isAdmin, async (req, res) => {
 
     try {
         const query = `
-            INSERT INTO discounts (code, type, value, min_order_value, is_active)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO discounts (code, type, value, min_order_value, usage_limit_per_user, first_order_only, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
         const activeState = (is_active === false || is_active === 'false' || is_active === 0) ? false : true;
+        const limitState = (usage_limit_per_user && usage_limit_per_user > 0) ? parseInt(usage_limit_per_user) : null;
+        const firstOrderState = (first_order_only === true || first_order_only === 'true' || first_order_only === 1) ? true : false;
 
         await db.query(query, [
             code.toUpperCase(),
             type.toUpperCase(),
             value,
             min_order_value || 0,
+            limitState,
+            firstOrderState,
             activeState
         ]);
 
@@ -50,7 +54,7 @@ router.post('/', isAdmin, async (req, res) => {
 // PUT update discount (Admin only) - usually used to toggle active status or edit details
 router.put('/:id', isAdmin, async (req, res) => {
     const { id } = req.params;
-    const { code, type, value, min_order_value, is_active } = req.body;
+    const { code, type, value, min_order_value, usage_limit_per_user, first_order_only, is_active } = req.body;
 
     try {
         // Build dynamic update query to handle partial updates
@@ -73,6 +77,16 @@ router.put('/:id', isAdmin, async (req, res) => {
         if (min_order_value !== undefined) {
             updates.push('min_order_value = ?');
             params.push(min_order_value);
+        }
+        if (usage_limit_per_user !== undefined) {
+            updates.push('usage_limit_per_user = ?');
+            const limitState = (usage_limit_per_user === null || usage_limit_per_user === '') ? null : parseInt(usage_limit_per_user);
+            params.push(limitState);
+        }
+        if (first_order_only !== undefined) {
+            updates.push('first_order_only = ?');
+            const firstOrderState = (first_order_only === true || first_order_only === 'true' || first_order_only === 1) ? true : false;
+            params.push(firstOrderState);
         }
         if (is_active !== undefined) {
             updates.push('is_active = ?');

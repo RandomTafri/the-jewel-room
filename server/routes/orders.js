@@ -29,7 +29,8 @@ router.post('/', authenticateToken, async (req, res) => {
         customerPhone,
         items, // Passed from frontend or we fetch from DB cart. Fetching from DB is safer.
         paymentMethod, // 'COD' or 'ONLINE'
-        totalAmount // Simplified: Frontend calculates, Backend verifies ideally.
+        totalAmount, // Simplified: Frontend calculates, Backend verifies ideally.
+        couponCode
     } = req.body;
 
     // In a real app, perform calculation verification here using `items` IDs.
@@ -49,7 +50,8 @@ router.post('/', authenticateToken, async (req, res) => {
             totalAmount ?? null,
             paymentMethod ?? null,
             JSON.stringify(items),
-            paymentMethod === 'COD' ? 'PENDING' : 'PENDING'
+            paymentMethod === 'COD' ? 'PENDING' : 'PENDING',
+            couponCode ?? null
         ];
 
         logRequest('POST /orders', 'CREATE', {}, { customerName, paymentMethod, totalAmount });
@@ -57,8 +59,8 @@ router.post('/', authenticateToken, async (req, res) => {
 
         const insert = await db.query(
             `INSERT INTO orders 
-            (user_id, customer_name, customer_email, customer_phone, shipping_address, total_amount, payment_method, items_snapshot, payment_status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            (user_id, customer_name, customer_email, customer_phone, shipping_address, total_amount, payment_method, items_snapshot, payment_status, coupon_code)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             params
         );
 

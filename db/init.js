@@ -84,6 +84,7 @@ const schemaStatements = [
         payment_method VARCHAR(50),
         payment_status VARCHAR(50) DEFAULT 'PENDING',
         order_status VARCHAR(50) DEFAULT 'PLACED',
+        coupon_code VARCHAR(50) DEFAULT NULL,
         razorpay_order_id VARCHAR(255),
         razorpay_payment_id VARCHAR(255),
         items_snapshot JSON,
@@ -97,6 +98,8 @@ const schemaStatements = [
         type VARCHAR(20) NOT NULL,
         value DECIMAL(10, 2) NOT NULL,
         min_order_value DECIMAL(10, 2) DEFAULT 0,
+        usage_limit_per_user INT DEFAULT NULL,
+        first_order_only BOOLEAN DEFAULT FALSE,
         is_active BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB`,

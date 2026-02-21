@@ -80,8 +80,8 @@ async function seed() {
 
         // 3. Discounts
         await pool.execute(
-            `INSERT INTO discounts (code, type, value, min_order_value, is_active)
-             VALUES ('WELCOME10', 'PERCENTAGE', 10, 500, true)
+            `INSERT INTO discounts (code, type, value, min_order_value, usage_limit_per_user, first_order_only, is_active)
+             VALUES ('WELCOME10', 'PERCENTAGE', 10, 500, NULL, FALSE, true)
              ON DUPLICATE KEY UPDATE code = code`
         );
 
