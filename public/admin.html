@@ -1112,10 +1112,10 @@
 
                 let itemsHtml = order.items.map(item => `
                     <tr>
-                        <td>${item.product_name}</td>
-                        <td>${item.quantity}</td>
-                        <td>${formatPrice(item.price)}</td>
-                        <td>${formatPrice(item.quantity * item.price)}</td>
+                        <td style="padding: 8px;">${item.name || item.product_name || 'Unknown Item'}</td>
+                        <td style="text-align: center; padding: 8px;">${item.quantity}</td>
+                        <td style="text-align: right; padding: 8px;">${formatPrice(item.price)}</td>
+                        <td style="text-align: right; padding: 8px;">${formatPrice(item.quantity * item.price)}</td>
                     </tr>
                 `).join('');
 
