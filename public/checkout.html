@@ -11,6 +11,36 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700&display=swap"
         rel="stylesheet">
+    <style>
+        /* Mobile Checkout Layout Fix */
+        .checkout-layout {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+            flex-direction: column-reverse;
+            /* Summary on top for mobile */
+        }
+
+        .checkout-form-section {
+            flex: 2;
+            width: 100%;
+        }
+
+        .checkout-summary-section {
+            flex: 1;
+            width: 100%;
+            background: #fafafa;
+            padding: 20px;
+            border: 1px solid #eee;
+        }
+
+        @media (min-width: 768px) {
+            .checkout-layout {
+                flex-direction: row;
+                /* Side-by-side on desktop */
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -27,8 +57,8 @@
         </div>
     </header>
 
-    <div class="container section flex" style="gap: 40px; align-items: flex-start;">
-        <div style="flex: 2;">
+    <div class="container section checkout-layout">
+        <div class="checkout-form-section">
             <h2>Checkout</h2>
             <form id="checkout-form" style="display: grid; gap: 15px; margin-top: 20px;">
                 <!-- If not logged in, ask for guest details, but we will protect this page via JS for simplicity or allow guest checkout -->
@@ -60,8 +90,8 @@
             </form>
         </div>
 
-        <div style="flex: 1; background: #fafafa; padding: 20px; border: 1px solid #eee;">
-            <h3>Order Summary</h3>
+        <div class="checkout-summary-section">
+            <h3 style="margin-top: 0;">Order Summary</h3>
             <div id="order-summary">Loading...</div>
             <hr style="margin: 15px 0;">
             <h3>Total: <span id="checkout-total">0</span></h3>
