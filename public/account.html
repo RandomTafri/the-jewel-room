@@ -54,6 +54,34 @@
                         </div>
                         <button type="submit" class="btn">Login</button>
                     </form>
+                    <p style="margin-top: 10px; font-size: 0.9rem;"><a href="#" onclick="toggleForgotPassword(event)"
+                            style="color: var(--text-light); text-decoration: underline;">Forgot Password?</a></p>
+
+                    <!-- Forgot Password Form -->
+                    <div id="customer-forgot-pw" class="hidden"
+                        style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                        <h4 style="margin-bottom: 8px; font-size: 1rem;">Reset Password</h4>
+                        <p style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">Enter your registered email &
+                            phone to verify your identity.</p>
+                        <form onsubmit="handleForgotPassword(event)" style="display: grid; gap: 10px;">
+                            <input type="email" name="email" placeholder="Registered Email" required class="input-field"
+                                style="padding: 10px;">
+                            <input type="tel" name="phone" placeholder="Registered Phone" required class="input-field"
+                                style="padding: 10px;">
+                            <div style="position: relative;">
+                                <input type="password" name="newPassword" id="customer-reset-pw"
+                                    placeholder="New Password" required minlength="4" class="input-field"
+                                    style="padding: 10px; padding-right: 40px; width: 100%;">
+                                <button type="button"
+                                    onclick="toggleResetPw('customer-reset-pw', 'customer-reset-pw-icon')"
+                                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666; font-size: 1.1rem;">
+                                    <i class="fa-solid fa-eye" id="customer-reset-pw-icon"></i>
+                                </button>
+                            </div>
+                            <button type="submit" class="btn btn-outline">Reset Password</button>
+                        </form>
+                        <p id="forgot-msg" style="margin-top: 10px; font-size: 0.85rem;"></p>
+                    </div>
                 </div>
                 <div style="width: 1px; background: #eee;"></div>
                 <div style="flex: 1; max-width: 400px;">
@@ -214,6 +242,54 @@
                 input.type = 'password';
                 icon.classList.remove('fa-eye-slash');
                 icon.classList.add('fa-eye');
+            }
+        }
+
+        function toggleResetPw(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        function toggleForgotPassword(e) {
+            e.preventDefault();
+            document.getElementById('customer-forgot-pw').classList.toggle('hidden');
+        }
+
+        async function handleForgotPassword(e) {
+            e.preventDefault();
+            const msgEl = document.getElementById('forgot-msg');
+            msgEl.innerText = '';
+            const email = e.target.email.value;
+            const phone = e.target.phone.value;
+            const newPassword = e.target.newPassword.value;
+
+            try {
+                const res = await fetch('/api/auth/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, phone, newPassword })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    msgEl.style.color = 'green';
+                    msgEl.innerText = data.message || 'Password reset successfully!';
+                    e.target.reset();
+                } else {
+                    msgEl.style.color = 'red';
+                    msgEl.innerText = data.error || 'Failed to reset password.';
+                }
+            } catch (err) {
+                msgEl.style.color = 'red';
+                msgEl.innerText = 'Network error.';
             }
         }
     </script>
