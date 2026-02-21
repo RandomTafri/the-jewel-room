@@ -68,8 +68,16 @@
                                 style="padding: 10px;">
                             <input type="tel" name="phone" placeholder="Registered Phone" required class="input-field"
                                 style="padding: 10px;">
-                            <input type="password" name="newPassword" placeholder="New Password" required minlength="4"
-                                class="input-field" style="padding: 10px;">
+                            <div style="position: relative;">
+                                <input type="password" name="newPassword" id="customer-reset-pw"
+                                    placeholder="New Password" required minlength="4" class="input-field"
+                                    style="padding: 10px; padding-right: 40px; width: 100%;">
+                                <button type="button"
+                                    onclick="toggleResetPw('customer-reset-pw', 'customer-reset-pw-icon')"
+                                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666; font-size: 1.1rem;">
+                                    <i class="fa-solid fa-eye" id="customer-reset-pw-icon"></i>
+                                </button>
+                            </div>
                             <button type="submit" class="btn btn-outline">Reset Password</button>
                         </form>
                         <p id="forgot-msg" style="margin-top: 10px; font-size: 0.85rem;"></p>
@@ -226,6 +234,20 @@
             const input = document.getElementById(inputId);
             const icon = button.querySelector('i');
 
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        function toggleResetPw(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
             if (input.type === 'password') {
                 input.type = 'text';
                 icon.classList.remove('fa-eye');

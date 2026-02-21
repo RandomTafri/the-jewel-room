@@ -44,7 +44,14 @@
                 <form onsubmit="handleAdminForgotPassword(event)" style="display: grid; gap: 10px;">
                     <input type="email" name="email" placeholder="Registered Email" required>
                     <input type="tel" name="phone" placeholder="Registered Phone" required>
-                    <input type="password" name="newPassword" placeholder="New Password" required minlength="4">
+                    <div style="position: relative;">
+                        <input type="password" name="newPassword" id="admin-reset-pw" placeholder="New Password"
+                            required minlength="4" style="padding-right: 40px; width: 100%;">
+                        <button type="button" onclick="toggleResetPw('admin-reset-pw', 'admin-reset-pw-icon')"
+                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666; font-size: 1.1rem;">
+                            <i class="fa-solid fa-eye" id="admin-reset-pw-icon"></i>
+                        </button>
+                    </div>
                     <button class="btn" style="width: 100%;">Reset Password</button>
                 </form>
                 <p id="admin-forgot-msg" style="margin-top: 10px; font-size: 0.85rem;"></p>
@@ -1600,6 +1607,20 @@ Thank you for shopping with us!`;
         }
 
         // ===================== FORGOT PASSWORD =====================
+
+        function toggleResetPw(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
 
         function showAdminForgotPassword(e) {
             e.preventDefault();
