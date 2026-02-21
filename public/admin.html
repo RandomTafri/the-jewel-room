@@ -301,7 +301,15 @@
                 </div>
                 <div>
                     <label id="au-password-label">Password *</label>
-                    <input type="password" id="au-password" placeholder="Enter password" minlength="4">
+                    <div style="position: relative;">
+                        <input type="password" id="au-password" placeholder="Enter password" minlength="4"
+                            style="padding-right: 40px; width: 100%;">
+                        <button type="button" onclick="toggleAdminUserPw()"
+                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666; font-size: 1.1rem;"
+                            aria-label="Toggle password visibility">
+                            <i class="fa-solid fa-eye" id="au-password-icon"></i>
+                        </button>
+                    </div>
                     <p id="au-password-hint" class="hidden" style="font-size: 0.8rem; color: #888; margin-top: 4px;">
                         Leave blank to keep current password</p>
                 </div>
@@ -1512,6 +1520,20 @@ Thank you for shopping with us!`;
                 </table>`;
             } catch (e) {
                 console.error(e);
+            }
+        }
+
+        function toggleAdminUserPw() {
+            const input = document.getElementById('au-password');
+            const icon = document.getElementById('au-password-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
             }
         }
 
