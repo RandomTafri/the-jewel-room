@@ -104,4 +104,33 @@ router.get('/me', async (req, res) => {
     }
 });
 
+// Forgot Password (verify email + phone, then reset)
+router.post('/forgot-password', async (req, res) => {
+    const { email, phone, newPassword } = req.body;
+    if (!email || !phone || !newPassword) {
+        return res.status(400).json({ error: 'Email, phone, and new password are required' });
+    }
+    try {
+        const result = await db.query('SELECT id, phone FROM users WHERE email = ?', [email]);
+        if (result.rows.length === 0) {
+            return res.status(400).json({ error: 'No account found with this email' });
+        }
+
+        const user = result.rows[0];
+        // Normalize phone numbers (strip spaces, dashes, +91 prefix for comparison)
+        const normalizePhone = (p) => (p || '').replace(/[\s\-\+]/g, '').replace(/^91/, '');
+        if (normalizePhone(user.phone) !== normalizePhone(phone)) {
+            return res.status(400).json({ error: 'Phone number does not match our records' });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await db.query('UPDATE users SET password_hash = ? WHERE id = ?', [hashedPassword, user.id]);
+
+        res.json({ message: 'Password updated successfully. You can now login with your new password.' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 module.exports = router;
