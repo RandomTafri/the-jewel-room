@@ -6,3 +6,5 @@ coverage
 dist
 build
 npm-debug.log
+public/startup-status.txt
+server/db/database.sqlite
