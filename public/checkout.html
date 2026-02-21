@@ -80,13 +80,13 @@
                     <p style="margin: 0; color: #2e7d32; font-weight: bold; font-size: 1.1rem;"><i
                             class="fa-brands fa-whatsapp"></i> WhatsApp Confirmation</p>
                     <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #1b5e20;">Upon placing your order, our team
-                        will instantly connect with you on WhatsApp to manually process your payment and arrange
+                        will connect with you on WhatsApp to manually process your payment and arrange
                         shipping.</p>
                 </div>
 
                 <button type="submit" class="btn"
-                    style="width: 100%; margin-top: 10px; background: #25D366; border-color: #25D366;"><i
-                        class="fa-brands fa-whatsapp"></i> Place Order</button>
+                    style="width: 100%; margin-top: 10px; background: #25D366; border-color: #25D366;">Place
+                    Order</button>
             </form>
         </div>
 
@@ -145,15 +145,19 @@
             `;
             if (discountAmount > 0) {
                 html += `
-                 <div class="flex justify-between" style="font-size: 0.9rem; color: var(--success);">
+                 <div class="flex justify-between" style="font-size: 0.9rem; color: var(--success); align-items: center;">
                      <span>Coupon Discount:</span>
-                     <span>-${formatPrice(discountAmount)}</span>
+                     <span>
+                         -${formatPrice(discountAmount)}
+                         <a href="#" onclick="removeCoupon(event)" style="margin-left: 10px; color: red; font-size: 0.8rem; text-decoration: underline;">Remove</a>
+                     </span>
                  </div>
                  `;
             } else if (discountCoupon) {
                 html += `
                  <div style="font-size: 0.8rem; color: red;">
                      Coupon failed: ${discountMessage}
+                     <a href="#" onclick="removeCoupon(event)" style="margin-left: 10px; text-decoration: underline;">Remove</a>
                  </div>
                  `;
             }
@@ -161,6 +165,12 @@
             summaryDiv.innerHTML = html;
 
             document.getElementById('checkout-total').innerText = formatPrice(cartTotal);
+        }
+
+        function removeCoupon(e) {
+            e.preventDefault();
+            localStorage.removeItem('coupon');
+            initCheckout();
         }
 
         document.getElementById('checkout-form').addEventListener('submit', async (e) => {

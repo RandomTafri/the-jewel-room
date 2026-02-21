@@ -674,9 +674,9 @@
                                 </select>
                             </td>
                             <td>
-                                <select onchange="updatePaymentStatus(${o.id}, this.value)" style="padding: 5px; font-size: 0.9rem; font-weight: bold; ${o.payment_status === 'PAID' ? 'color: green;' : 'color: orange;'}">
+                                <select onchange="updatePaymentStatus(${o.id}, this.value)" style="padding: 5px; font-size: 0.9rem; font-weight: bold; ${o.payment_status === 'COMPLETED' ? 'color: green;' : 'color: orange;'}">
                                     <option value="PENDING" ${o.payment_status === 'PENDING' ? 'selected' : ''}>PENDING</option>
-                                    <option value="PAID" ${o.payment_status === 'PAID' ? 'selected' : ''}>PAID</option>
+                                    <option value="COMPLETED" ${o.payment_status === 'COMPLETED' ? 'selected' : ''}>COMPLETED</option>
                                     <option value="FAILED" ${o.payment_status === 'FAILED' ? 'selected' : ''}>FAILED</option>
                                 </select>
                             </td>
@@ -698,7 +698,7 @@
             try {
                 await API.put(`/admin/orders/${id}/payment-status`, { payment_status: status });
                 if (event && event.target) {
-                    event.target.style.color = status === 'PAID' ? 'green' : 'orange';
+                    event.target.style.color = status === 'COMPLETED' ? 'green' : 'orange';
                 }
             } catch (e) { alert('Error updating payment status'); }
         }

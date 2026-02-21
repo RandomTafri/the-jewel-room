@@ -52,6 +52,9 @@
                     <input type="text" id="coupon-code" placeholder="Coupon Code"
                         style="padding: 5px; flex:1; margin-right:5px;">
                     <button onclick="applyCoupon()" class="btn-outline" style="padding: 5px 10px;">Apply</button>
+                    <button onclick="removeCoupon()" class="btn-outline"
+                        style="padding: 5px 10px; margin-left: 5px; display: none; color: red; border-color: red;"
+                        id="remove-coupon-btn">Remove</button>
                 </div>
                 <div id="coupon-msg" style="font-size:0.8rem; margin-top:5px;"></div>
                 <div class="flex justify-between" style="margin-top: 10px; color: var(--success);">
@@ -148,6 +151,15 @@
             const code = document.getElementById('coupon-code').value;
             if (!code) return;
             appliedCoupon = code;
+            document.getElementById('remove-coupon-btn').style.display = 'inline-block';
+            loadCartPage();
+        }
+
+        function removeCoupon() {
+            appliedCoupon = null;
+            document.getElementById('coupon-code').value = '';
+            document.getElementById('remove-coupon-btn').style.display = 'none';
+            localStorage.removeItem('coupon');
             loadCartPage();
         }
 
@@ -163,11 +175,6 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // restore coupon if any
-            if (localStorage.getItem('coupon')) {
-                appliedCoupon = localStorage.getItem('coupon');
-                document.getElementById('coupon-code').value = appliedCoupon;
-            }
             loadCartPage();
         });
     </script>
