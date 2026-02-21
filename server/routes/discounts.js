@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { requireAdmin } = require('../middleware/auth');
+const { isAdmin } = require('../middleware/auth');
 
 // GET all discounts (Admin only)
-router.get('/', requireAdmin, async (req, res) => {
+router.get('/', isAdmin, async (req, res) => {
     try {
         const result = await db.query('SELECT * FROM discounts ORDER BY created_at DESC');
         res.json(result.rows);
@@ -15,7 +15,7 @@ router.get('/', requireAdmin, async (req, res) => {
 });
 
 // POST new discount (Admin only)
-router.post('/', requireAdmin, async (req, res) => {
+router.post('/', isAdmin, async (req, res) => {
     const { code, type, value, min_order_value, is_active } = req.body;
 
     if (!code || !type || value === undefined) {
@@ -48,7 +48,7 @@ router.post('/', requireAdmin, async (req, res) => {
 });
 
 // PUT update discount (Admin only) - usually used to toggle active status or edit details
-router.put('/:id', requireAdmin, async (req, res) => {
+router.put('/:id', isAdmin, async (req, res) => {
     const { id } = req.params;
     const { code, type, value, min_order_value, is_active } = req.body;
 
@@ -99,7 +99,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
 });
 
 // DELETE a discount (Admin only)
-router.delete('/:id', requireAdmin, async (req, res) => {
+router.delete('/:id', isAdmin, async (req, res) => {
     const { id } = req.params;
 
     try {
