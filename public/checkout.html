@@ -45,18 +45,18 @@
                     style="padding: 10px; border: 1px solid #ccc;"></textarea>
 
                 <h3 style="margin-top: 20px;">Payment Method</h3>
-                <div style="margin-bottom: 10px;">
-                    <label>
-                        <input type="radio" name="payment" value="COD" checked> Cash on Delivery (COD)
-                    </label>
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <label>
-                        <input type="radio" name="payment" value="ONLINE"> Online Payment (UPI/Card/Netbanking)
-                    </label>
+                <div
+                    style="margin-bottom: 15px; padding: 15px; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 6px;">
+                    <p style="margin: 0; color: #2e7d32; font-weight: bold; font-size: 1.1rem;"><i
+                            class="fa-brands fa-whatsapp"></i> WhatsApp Confirmation</p>
+                    <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #1b5e20;">Upon placing your order, our team
+                        will instantly connect with you on WhatsApp to manually process your payment and arrange
+                        shipping.</p>
                 </div>
 
-                <button type="submit" class="btn" style="width: 100%; margin-top: 20px;">Place Order</button>
+                <button type="submit" class="btn"
+                    style="width: 100%; margin-top: 10px; background: #25D366; border-color: #25D366;"><i
+                        class="fa-brands fa-whatsapp"></i> Place Order</button>
             </form>
         </div>
 
@@ -171,7 +171,7 @@
                 return;
             }
 
-            const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+            const paymentMethod = 'WHATSAPP';
             const data = {
                 customerName: document.getElementById('name').value,
                 customerPhone: document.getElementById('phone').value,
@@ -186,47 +186,10 @@
                 const res = await API.post('/orders', data);
 
                 if (paymentMethod === 'ONLINE') {
-                    // Open Razorpay
-                    const options = {
-                        "key": State.config.razorpayKeyId, // Enter the Key ID generated from the Dashboard
-                        "amount": res.razorpayOrder.amount,
-                        "currency": "INR",
-                        "name": State.config.appName,
-                        "description": "Order #" + res.orderId,
-                        "order_id": res.razorpayOrder.id,
-                        "handler": async function (response) {
-                            // Verify payment
-                            try {
-                                const verify = await API.post('/orders/verify-payment', {
-                                    razorpay_order_id: response.razorpay_order_id,
-                                    razorpay_payment_id: response.razorpay_payment_id,
-                                    razorpay_signature: response.razorpay_signature,
-                                    orderId: res.orderId
-                                });
-                                if (verify.status === 'success') {
-                                    window.location.href = 'success.html?orderId=' + res.orderId;
-                                } else {
-                                    alert('Payment verification failed');
-                                }
-                            } catch (e) {
-                                alert('Payment verification error');
-                            }
-                        },
-                        "prefill": {
-                            "name": data.customerName,
-                            "email": document.getElementById('email').value,
-                            "contact": data.customerPhone
-                        },
-                        "theme": {
-                            "color": "#d4af37"
-                        }
-                    };
-                    const rzp1 = new Razorpay(options);
-                    rzp1.open();
-
+                    // Hidden
                 } else {
-                    // COD Success
-                    window.location.href = 'success.html?orderId=' + res.orderId;
+                    // WhatsApp Success
+                    window.location.href = `success.html?orderId=${res.orderId}&total=${cartTotal}`;
                 }
 
             } catch (e) {

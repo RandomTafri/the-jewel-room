@@ -655,6 +655,7 @@
                         <th>Customer</th>
                         <th>Amount</th>
                         <th>Status</th>
+                        <th>Payment Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -672,6 +673,13 @@
                                     <option value="CANCELLED" ${o.order_status === 'CANCELLED' ? 'selected' : ''}>CANCELLED</option>
                                 </select>
                             </td>
+                            <td>
+                                <select onchange="updatePaymentStatus(${o.id}, this.value)" style="padding: 5px; font-size: 0.9rem; font-weight: bold; ${o.payment_status === 'PAID' ? 'color: green;' : 'color: orange;'}">
+                                    <option value="PENDING" ${o.payment_status === 'PENDING' ? 'selected' : ''}>PENDING</option>
+                                    <option value="PAID" ${o.payment_status === 'PAID' ? 'selected' : ''}>PAID</option>
+                                    <option value="FAILED" ${o.payment_status === 'FAILED' ? 'selected' : ''}>FAILED</option>
+                                </select>
+                            </td>
                             <td><button onclick="viewOrder(${o.id})" class="btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">Details</button></td>
                         </tr>
                     `).join('')}
@@ -684,6 +692,15 @@
                 await API.put(`/admin/orders/${id}/status`, { status });
                 // Optional: Toast message
             } catch (e) { alert('Error updating status'); }
+        }
+
+        async function updatePaymentStatus(id, status) {
+            try {
+                await API.put(`/admin/orders/${id}/payment-status`, { payment_status: status });
+                if (event && event.target) {
+                    event.target.style.color = status === 'PAID' ? 'green' : 'orange';
+                }
+            } catch (e) { alert('Error updating payment status'); }
         }
 
         async function loadAdminProducts() {

@@ -25,6 +25,18 @@ router.put('/orders/:id/status', isAdmin, async (req, res) => {
     }
 });
 
+// Update Payment Status
+router.put('/orders/:id/payment-status', isAdmin, async (req, res) => {
+    const { payment_status } = req.body;
+    const { id } = req.params;
+    try {
+        await db.query('UPDATE orders SET payment_status = ? WHERE id = ?', [payment_status, id]);
+        res.json({ message: 'Updated' });
+    } catch (err) {
+        res.status(500).json({ error: 'Error' });
+    }
+});
+
 // Get Single Order Details
 router.get('/orders/:id', isAdmin, async (req, res) => {
     const { id } = req.params;

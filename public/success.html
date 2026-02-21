@@ -7,18 +7,33 @@
     <title>Order Placed - Shree Roop Creative</title>
     <link rel="icon" type="image/png" href="images/logo.png">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
 <body>
     <header>
         <div class="container navbar">
-            <div class="logo"><a href="index.html" style="display: flex; align-items: center; text-decoration: none; color: #333;">Shree Roop Creative</a></div>
+            <div class="logo"><a href="index.html"
+                    style="display: flex; align-items: center; text-decoration: none; color: #333;">Shree Roop
+                    Creative</a></div>
         </div>
     </header>
     <div class="container section text-center">
         <h1 style="color: var(--success); margin-bottom: 20px;">Order Placed Successfully!</h1>
         <p>Thank you for shopping with us.</p>
         <p>Your Order ID is: <span id="order-id" style="font-weight: bold;"></span></p>
+
+        <div
+            style="margin-top: 30px; background: #e8f5e9; padding: 20px; border-radius: 8px; border: 1px solid #c8e6c9; display: inline-block; text-align: left; max-width: 400px;">
+            <h3 style="color: #2e7d32; margin-top: 0;"><i class="fa-brands fa-whatsapp"></i> Next Step: Payment</h3>
+            <p style="margin-bottom: 5px; font-size: 0.95rem;">Our team will message you shortly on WhatsApp to securely
+                complete your payment.</p>
+            <p style="margin-bottom: 15px; font-size: 0.95rem; color: #555;">Or, you can click below to message us right
+                now with your order details!</p>
+            <a href="#" id="wa-link" target="_blank" class="btn"
+                style="background: #25D366; border-color: #25D366; display: block; text-align: center;"><i
+                    class="fa-brands fa-whatsapp"></i> Confirm Order on WhatsApp</a>
+        </div>
 
         <div style="margin-top: 40px;">
             <a href="shop.html" class="btn">Continue Shopping</a>
@@ -27,9 +42,19 @@
     </div>
     <script>
         const params = new URLSearchParams(window.location.search);
-        document.getElementById('order-id').innerText = '#' + (params.get('orderId') || 'Unknown');
+        const orderId = params.get('orderId') || 'Unknown';
+        const total = params.get('total') || '0';
+
+        document.getElementById('order-id').innerText = '#' + orderId;
+
+        // Construct WhatsApp Link
+        // REPLACE this phone number with the actual business WhatsApp number (including country code)
+        const businessPhone = '919999999999';
+        const message = encodeURIComponent(`Hello! I just placed Order #${orderId} on Shree Roop Creative for ₹${total}. How can I complete my payment?`);
+        document.getElementById('wa-link').href = `https://wa.me/${businessPhone}?text=${message}`;
+
     </script>
-<script src="js/mobile-header.js"></script>
+    <script src="js/mobile-header.js"></script>
 </body>
 
 </html>
