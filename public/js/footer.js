@@ -89,7 +89,7 @@
 
                     <!-- Copyright Bar -->
                     <div class="footer-bottom">
-                        <p>&copy; ${new Date().getFullYear()} Shree Roop Creative. All rights reserved.</p>
+                        <p>&copy; ${new Date().getFullYear()} Shree Roop Creative. All rights reserved. | Developed by <a href="mailto:gargnitish678@gmail.com" style="color: #d4af37; text-decoration: none;">NKG</a></p>
                     </div>
                 </div>
             `;
