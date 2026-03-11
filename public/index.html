@@ -7,10 +7,14 @@
     <title>Shree Roop Creative | Exclusive Jewelry</title>
     <link rel="icon" type="image/png" href="images/logo.png">
     <link rel="stylesheet" href="css/style.css?v=3.0">
+    <link rel="stylesheet" href="css/futuristic.css?v=1.0">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- VanillaTilt for 3D Cards -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
     <style>
         /* Horizontal Scroll for Collections */
         .scrolling-wrapper {
@@ -85,7 +89,7 @@
                     <img src="images/logo.png" alt="Shree Roop Creative"
                         style="height: 60px; vertical-align: middle; margin-right: 15px;">
                     <span
-                        style="font-family: 'Cinzel', serif; font-size: 1.5rem; font-weight: 700; letter-spacing: 1px; color: #d4af37;">Shree
+                        style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; letter-spacing: 1px; color: var(--accent-color);">Shree
                         Roop Creative</span>
                 </a>
             </div>
@@ -102,16 +106,14 @@
     </header>
 
     <!-- Hero -->
-    <section class="hero section"
-        style="position: relative; height: 600px; display: flex; align-items: center; text-align: center; color: white;">
-        <div style="position: absolute; top:0; left:0; width: 100%; height: 100%; z-index: -1;">
-            <img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=1500&q=80"
-                style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.5);">
-        </div>
-        <div class="container">
-            <h2 style="font-size: 3.5rem; margin-bottom: 20px; color: #d4af37 !important;">Elegance is Eternal</h2>
-            <p style="margin-bottom: 30px; font-size: 1.5rem;">Discover our exclusive collection of artificial jewelry.
-            </p>
+    <section class="hero hero-wrapper preserve-3d">
+        <img class="hero-bg"
+            src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=1500&q=80"
+            alt="Background">
+        <div class="hero-overlay"></div>
+        <div class="container hero-content text-center">
+            <h2>Elegance is Eternal</h2>
+            <p>Discover our exclusive collection of futuristic jewelry.</p>
             <a href="shop.html" class="btn">Shop Now</a>
         </div>
     </section>
@@ -131,7 +133,7 @@
     </section>
 
     <!-- Collections (Dynamic) -->
-    <section class="section" style="background-color: #fbfbfb;">
+    <section class="section">
         <div class="container">
             <h3 class="text-center"
                 style="font-size: 1.5rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 30px;">Explore
@@ -156,7 +158,7 @@
     </section>
 
     <!-- Trending Products -->
-    <section id="trending-products-section" class="section" style="background-color: #fbf6e5;">
+    <section id="trending-products-section" class="section">
         <div class="container">
             <h3 class="text-center">🔥 Trending Now</h3>
             <div id="trending-products" class="product-grid" style="margin-top: 30px;">
@@ -169,7 +171,7 @@
     </section>
 
     <!-- Brochures Section -->
-    <section class="section" style="background-color: #fbfbfb;">
+    <section class="section">
         <div class="container">
             <h3 class="text-center">Product Brochures</h3>
             <div id="home-brochures-list" class="product-grid" style="margin-top: 30px;">
@@ -182,9 +184,9 @@
     </section>
 
     <!-- Styled Looks (Instagram) -->
-    <section id="styled-looks-section" class="section" style="background-color: #fff;">
+    <section id="styled-looks-section" class="section">
         <div class="container">
-            <h3 class="text-center" style="font-family: 'Cinzel', serif; letter-spacing: 2px;">Styled Looks</h3>
+            <h3 class="text-center" style="letter-spacing: 2px;">Styled Looks</h3>
             <p class="text-center" style="color: #666; margin-bottom: 30px;">Follow us <a
                     href="https://instagram.com/shree_roop_creative" target="_blank"
                     style="color: #d4af37;">@shree_roop_creative</a></p>
@@ -196,7 +198,7 @@
     </section>
 
     <!-- Reviews -->
-    <section class="section" style="background-color: var(--secondary-color);">
+    <section class="section">
         <div class="container text-center">
             <h3>Customer Reviews</h3>
             <div id="home-reviews-list" class="grid"
@@ -507,6 +509,38 @@
                     emailEl.innerHTML = `<a href="mailto:${State.config.supportEmail}" style="color: inherit; text-decoration: underline;">${State.config.supportEmail}</a>`;
                 }
             }, 500);
+
+            // Initialize 3D Parallax on Hero Section
+            const heroBg = document.querySelector('.hero-bg');
+            const heroContent = document.querySelector('.hero-content');
+            document.addEventListener('mousemove', (e) => {
+                if (window.scrollY > 800) return; // Only calculate if hero is visible
+                const x = (e.clientX / window.innerWidth - 0.5) * 20; // max 20px move
+                const y = (e.clientY / window.innerHeight - 0.5) * 20;
+
+                if (heroBg) heroBg.style.transform = `translate(${x}px, ${y}px)`;
+                if (heroContent) heroContent.style.transform = `rotateY(${x * 0.5}deg) rotateX(${-y * 0.5}deg)`;
+            });
+
+            // Initialize VanillaTilt using MutationObserver because cards are loaded dynamically
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.addedNodes.length) {
+                        const cards = document.querySelectorAll('.product-card, .collection-item, .review-card');
+                        if (cards.length > 0 && typeof VanillaTilt !== 'undefined') {
+                            VanillaTilt.init(cards, {
+                                max: 15,
+                                speed: 400,
+                                glare: true,
+                                "max-glare": 0.2,
+                                scale: 1.05
+                            });
+                        }
+                    }
+                });
+            });
+
+            observer.observe(document.body, { childList: true, subtree: true });
         });
     </script>
     <script src="js/mobile-header.js"></script>
