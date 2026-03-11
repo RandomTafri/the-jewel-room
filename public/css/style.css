@@ -1320,3 +1320,54 @@ footer {
         min-width: 520px;
     }
 }
+
+/* 3D Parallax & Immersive Effects */
+.preserve-3d {
+    transform-style: preserve-3d;
+    perspective: 1000px;
+}
+
+.hero-wrapper {
+    perspective: 1000px;
+    height: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    color: white;
+}
+
+.hero-bg {
+    position: absolute;
+    top: -5%;
+    left: -5%;
+    width: 110%;
+    height: 110%;
+    object-fit: cover;
+    z-index: -1;
+    filter: brightness(0.5);
+    transition: transform 0.1s ease-out;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    transform-style: preserve-3d;
+    transition: transform 0.1s ease-out;
+}
+
+/* Base adjustment for cards using VanillaTilt */
+.product-card,
+.collection-item,
+.review-card {
+    transform-style: preserve-3d;
+}
+
+.product-card img {
+    transform: translateZ(20px);
+}
+
+.card-info {
+    transform: translateZ(10px);
+}
