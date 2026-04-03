@@ -11,6 +11,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- VanillaTilt for 3D Cards -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
     <style>
         /* Horizontal Scroll for Collections */
         .scrolling-wrapper {
@@ -117,7 +119,7 @@
     </section>
 
     <!-- About Us -->
-    <section class="section">
+    <section class="section reveal-on-scroll">
         <div class="container text-center" style="max-width: 800px;">
             <h3>About Shree Roop Creative</h3>
             <p style="margin-top: 20px; font-size: 1.1rem; color: #555;">
@@ -131,7 +133,7 @@
     </section>
 
     <!-- Collections (Dynamic) -->
-    <section class="section" style="background-color: #fbfbfb;">
+    <section class="section reveal-on-scroll" style="background-color: #fbfbfb;">
         <div class="container">
             <h3 class="text-center"
                 style="font-size: 1.5rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 30px;">Explore
@@ -143,7 +145,7 @@
     </section>
 
     <!-- Featured Products -->
-    <section id="featured-products-section" class="section">
+    <section id="featured-products-section" class="section reveal-on-scroll">
         <div class="container">
             <h3 class="text-center">Featured Products</h3>
             <div id="featured-products" class="product-grid" style="margin-top: 30px;">
@@ -156,7 +158,7 @@
     </section>
 
     <!-- Trending Products -->
-    <section id="trending-products-section" class="section" style="background-color: #fbf6e5;">
+    <section id="trending-products-section" class="section reveal-on-scroll" style="background-color: #fbf6e5;">
         <div class="container">
             <h3 class="text-center">🔥 Trending Now</h3>
             <div id="trending-products" class="product-grid" style="margin-top: 30px;">
@@ -169,7 +171,7 @@
     </section>
 
     <!-- Brochures Section -->
-    <section class="section" style="background-color: #fbfbfb;">
+    <section class="section reveal-on-scroll" style="background-color: #fbfbfb;">
         <div class="container">
             <h3 class="text-center">Product Brochures</h3>
             <div id="home-brochures-list" class="product-grid" style="margin-top: 30px;">
@@ -182,7 +184,7 @@
     </section>
 
     <!-- Styled Looks (Instagram) -->
-    <section id="styled-looks-section" class="section" style="background-color: #fff;">
+    <section id="styled-looks-section" class="section reveal-on-scroll" style="background-color: #fff;">
         <div class="container">
             <h3 class="text-center" style="font-family: 'Cinzel', serif; letter-spacing: 2px;">Styled Looks</h3>
             <p class="text-center" style="color: #666; margin-bottom: 30px;">Follow us <a
@@ -196,7 +198,7 @@
     </section>
 
     <!-- Reviews -->
-    <section class="section" style="background-color: var(--secondary-color);">
+    <section class="section reveal-on-scroll" style="background-color: var(--secondary-color);">
         <div class="container text-center">
             <h3>Customer Reviews</h3>
             <div id="home-reviews-list" class="grid"
@@ -240,6 +242,10 @@
     </div>
 
     <footer id="site-footer"></footer>
+
+    <button class="scroll-to-top" id="scrollToTopBtn" aria-label="Scroll to top" title="Go to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
 
     <script src="js/app.js"></script>
     <script src="js/footer.js"></script>
@@ -507,6 +513,54 @@
                     emailEl.innerHTML = `<a href="mailto:${State.config.supportEmail}" style="color: inherit; text-decoration: underline;">${State.config.supportEmail}</a>`;
                 }
             }, 500);
+
+            // Initialize VanillaTilt using MutationObserver because cards are loaded dynamically
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.addedNodes.length) {
+                        const cards = document.querySelectorAll('.product-card, .collection-item, .review-card');
+                        if (cards.length > 0 && typeof VanillaTilt !== 'undefined') {
+                            VanillaTilt.init(cards, {
+                                max: 15,
+                                speed: 400,
+                                glare: true,
+                                "max-glare": 0.2,
+                                scale: 1.05
+                            });
+                        }
+                    }
+                });
+            });
+
+            observer.observe(document.body, { childList: true, subtree: true });
+
+            // Reveal on Scroll Logic
+            const revealElements = document.querySelectorAll('.reveal-on-scroll');
+            const revealObserver = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        obs.unobserve(entry.target); // Reveal only once
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+            revealElements.forEach(el => revealObserver.observe(el));
+
+            // Scroll to Top Logic
+            const scrollTopBtn = document.getElementById('scrollToTopBtn');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 400) {
+                    scrollTopBtn.classList.add('show');
+                } else {
+                    scrollTopBtn.classList.remove('show');
+                }
+            });
+
+            scrollTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
         });
     </script>
     <script src="js/mobile-header.js"></script>
